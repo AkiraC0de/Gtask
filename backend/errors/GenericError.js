@@ -1,19 +1,21 @@
-class ResponseError extends Error {
-  constructor(status, message, field = null) {
+const ERROR_CODES = require('../errors/errorCodes');
+
+class GenericError extends Error {
+  constructor(status, message, code) {
       super(message);
       this.name = this.constructor.name;
       this.status = status;
-      this.field = field;
+      this.code = code 
       Error.captureStackTrace(this, this.constructor);
   }
 
   toJSON() {
       return {
           success: false,
-          field: this.field || 'server',
+          code: this.code || ERROR_CODES.UNKOWN_ERROR,  
           message: this.message
       };
   }
 }
 
-module.exports = ResponseError;
+module.exports = GenericError;

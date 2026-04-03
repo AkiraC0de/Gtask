@@ -12,7 +12,8 @@ const {
 const {
   generateSixDigitCode,
   isAuthorizedForNewToken,
-  generateCryptoToken
+  generateCryptoToken,
+  validateRequiredFields
 } = require('../utils/utils');
 
 const {
@@ -21,32 +22,39 @@ const {
   generateForgotPasswordEmailHTML
 } = require('../utils/emailHtml');
 
-const ResponseError = require('../classes/ResponseError');
+const GenericError = require('../errors/GenericError');
+const MissingFieldError = require('../errors/MissingFieldError');
 
 const { sendEmail } = require('../utils/mailer');
 
 const registerUser = async (userData) => {
   if(!userData) {
-    throw new ResponseError(400, 'Request body cannot be empty.');
+    throw new GenericError(400, 'Request body cannot be empty.');
   }
 
-  if (!userData.firstName?.trim() || !userData.lastName?.trim() || !userData.email?.trim() || !userData.password?.trim()) {
-    throw new ResponseError(400, 'All fields are required and cannot be empty.');
+  // Required fields validation
+  const REQUIRED_FIELDS = ["firstName", "lastName", "email", "password"];
+  const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+
+  if (!requiredFieldValidation.isValid) {
+    throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
   }
 
-  // const existingUser = await User.findOne({email});
+  const { firstName, lastName, middleName, email, password } = userData;
 
-  // if(existingUser?.isVerified){
-  //   throw { status: 400, field: 'email', message: 'Email Already Registered'};
-  // }
+  const existingUser = await User.findOne({email});
 
-  // // NEEDS REFACTORING
-  // if (existingUser && !existingUser.isVerified) {
-  //   await Promise.all([
-  //     Token.deleteOne({ user: existingUser._id }),
-  //     existingUser.deleteOne()
-  //   ]);
-  // }
+  if(existingUser?.isVerified){
+    throw { status: 400, field: 'email', message: 'Email Already Registered'};
+  }
+
+  // NEEDS REFACTORING
+  if (existingUser && !existingUser.isVerified) {
+    await Promise.all([
+      Token.deleteOne({ user: existingUser._id }),
+      existingUser.deleteOne()
+    ]);
+  }
 
   // const user = await User.create({
   //   firstName, 

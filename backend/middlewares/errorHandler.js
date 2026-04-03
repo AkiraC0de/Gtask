@@ -1,4 +1,4 @@
-const ResponseError = require('../classes/ResponseError');
+const ResponseError = require('../errors/GenericError');
 
 const errorHandler = (err, req, res, next) => {
     if (err instanceof ResponseError) {
