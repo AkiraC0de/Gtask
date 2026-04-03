@@ -132,10 +132,12 @@ const verifyUserEmailResend = async (user, token) => {
     throw { status: 400, message: 'Missing data' };
   }
 
-  // NEEDS TO BE UPDATED TO RATE LIMITER
+  // This checks if the previous Token was in the DB for more than the COOLDOWN time (2 mins)
   if(!isAuthorizedForNewToken(token.createdAt)){
     throw { status: 400, message: 'Please wait a few moments before requesting a new token' };
   }
+
+  await token.deleteOne();
 
   const newOtp = generateSixDigitCode();
   const hashedOtp = crypto.createHash('sha256').update(newOtp).digest('hex');
@@ -143,16 +145,11 @@ const verifyUserEmailResend = async (user, token) => {
   const newToken = generateCryptoToken();
   const hashedToken = crypto.createHash('sha256').update(newToken).digest('hex');
 
-  await Token.findOneAndUpdate({ 
-    user: user._id, 
-    type: 'email_verify' }, { 
-      token: hashedToken,                     
-      otp: hashedOtp 
-    }, { 
-      upsert: true, 
-      new: true, 
-    }
-  );
+  await Token.create({
+    user: user._id,
+    token: hashedToken,                     
+    otp: hashedOtp
+  });
 
   const emailHtml = generateResendCodeHTML(newOtp);
 
