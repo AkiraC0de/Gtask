@@ -1,7 +1,7 @@
-const ResponseError = require('../errors/GenericError');
+const GenericError = require('../errors/GenericError');
 
 const errorHandler = (err, req, res, next) => {
-    if (err instanceof ResponseError) {
+    if (err instanceof GenericError) {
         return res.status(err.status).json(err.toJSON());
     }
 

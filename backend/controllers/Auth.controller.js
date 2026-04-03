@@ -15,19 +15,42 @@ const {
     requestResetUserPassword,
 } = require('../services/Auth.services');
 
-const signUp = async (req, res, next) => {
-    try {
-        const result = await registerUser(req.body);
+const {
+  validateRequiredFields,
+  validateEmail
+} = require('../utils/validation');
 
-        res.status(201).json({
-            success: true,
-            message: result.message,
-            token: result.token,
-            user: result.user
-        });
-    } catch (error) {
-        next(error);
+const MissingFieldError = require('../errors/MissingFieldError');
+const GenericError = require('../errors/GenericError');
+const ERROR_CODES = require('../errors/errorCodes');
+
+
+const signUp = async (req, res, next) => {
+    if(!req.body) {
+        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
     }
+
+    // check required fields
+    const REQUIRED_FIELDS = [ 
+        { field : "firstName", code : ERROR_CODES.MISSING_FIRSTNAME }, 
+        { field : "lastName", code : ERROR_CODES.MISSING_LASTNAME }, 
+        { field : "email", code : ERROR_CODES.MISSING_EMAIL },
+        { field : "password", code : ERROR_CODES.MISSING_PASSWORD }
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
+
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
+
+    const result = await registerUser(req.body);
+
+    res.status(201).json({
+        success: true,
+        message: result.message,
+        token: result.token,
+        user: result.user
+    });
 }
 
 // const logIn = async (req, res) => {

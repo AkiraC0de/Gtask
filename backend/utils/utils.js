@@ -18,41 +18,10 @@ const generateCryptoToken = () => {
   return crypto.randomBytes(TOKEN_BYTES).toString('hex')
 }
 
-const validateRequiredFields = (requiredFields, obj) => {
-  let errors = [];
 
-  for (const field of requiredFields) {
-    const value = obj[field];
-
-    if (
-      value === undefined ||
-      value === null ||
-      (typeof value === "string" && value.trim() === "")
-    ) {
-      errors.push({
-        field,
-        message: `${field} is required.`
-      });
-    }
-  }
-
-  const missingFieldsString = errors.map(field => field.field).join(", ");
-  const message = `${missingFieldsString} is/are required and cannot be empty.`;
-
-  if(errors.length > 0) {
-    return { 
-      isValid : false,
-      message,
-      errors
-    };
-  }
-
-  return { isValid : true };
-}
 
 module.exports = { 
   generateSixDigitCode, 
   isAuthorizedForNewToken,
   generateCryptoToken,
-  validateRequiredFields
 };

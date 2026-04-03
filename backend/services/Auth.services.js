@@ -13,8 +13,12 @@ const {
   generateSixDigitCode,
   isAuthorizedForNewToken,
   generateCryptoToken,
-  validateRequiredFields
 } = require('../utils/utils');
+
+const {
+  validateRequiredFields,
+  validateEmail
+} = require('../utils/validation');
 
 const {
   generateCodeVerificationHTML,
@@ -26,35 +30,29 @@ const GenericError = require('../errors/GenericError');
 const MissingFieldError = require('../errors/MissingFieldError');
 
 const { sendEmail } = require('../utils/mailer');
+const ERROR_CODES = require('../errors/errorCodes');
 
 const registerUser = async (userData) => {
-  if(!userData) {
-    throw new GenericError(400, 'Request body cannot be empty.');
-  }
-
-  // Required fields validation
-  const REQUIRED_FIELDS = ["firstName", "lastName", "email", "password"];
-  const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
-
-  if (!requiredFieldValidation.isValid) {
-    throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+  const emailValidation = validateEmail(userData.email);
+  if(!emailValidation.success){
+    throw new GenericError(400, emailValidation.message, ERROR_CODES.INVALID_EMAIL_FORMAT);
   }
 
   const { firstName, lastName, middleName, email, password } = userData;
 
   const existingUser = await User.findOne({email});
 
-  if(existingUser?.isVerified){
-    throw { status: 400, field: 'email', message: 'Email Already Registered'};
+  if(existingUser?.isEmailVerified){
+    throw new GenericError(400, "Email already registered", ERROR_CODES.EMAIL_ALREADY_EXISTS);
   }
 
-  // NEEDS REFACTORING
-  if (existingUser && !existingUser.isVerified) {
-    await Promise.all([
-      Token.deleteOne({ user: existingUser._id }),
-      existingUser.deleteOne()
-    ]);
-  }
+  // // NEEDS REFACTORING
+  // if (existingUser && !existingUser.isVerified) {
+  //   await Promise.all([
+  //     Token.deleteOne({ user: existingUser._id }),
+  //     existingUser.deleteOne()
+  //   ]);
+  // }
 
   // const user = await User.create({
   //   firstName, 
@@ -86,9 +84,9 @@ const registerUser = async (userData) => {
 
   return {
       message: `The account (${email}) have successfully registered`,
-      token : rawToken,
+      token : 'test',
       user: {
-          email: user.email
+          email: "user.email"
       }
   };
 }
