@@ -21,55 +21,60 @@ const {
   generateForgotPasswordEmailHTML
 } = require('../utils/emailHtml');
 
+const ResponseError = require('../classes/ResponseError');
+
 const { sendEmail } = require('../utils/mailer');
 
-
-const registerUser = async ({ firstName, lastName, email, password }) => {
-  if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
-    throw { status: 400, message: 'Missing data' };
+const registerUser = async (userData) => {
+  if(!userData) {
+    throw new ResponseError(400, 'Request body cannot be empty.');
   }
 
-  const existingUser = await User.findOne({email});
-
-  if(existingUser?.isVerified){
-    throw { status: 400, field: 'email', message: 'Email Already Registered'};
+  if (!userData.firstName?.trim() || !userData.lastName?.trim() || !userData.email?.trim() || !userData.password?.trim()) {
+    throw new ResponseError(400, 'All fields are required and cannot be empty.');
   }
 
-  // NEEDS REFACTORING
-  if (existingUser && !existingUser.isVerified) {
-    await Promise.all([
-      Token.deleteOne({ user: existingUser._id }),
-      existingUser.deleteOne()
-    ]);
-  }
+  // const existingUser = await User.findOne({email});
 
-  const user = await User.create({
-    firstName, 
-    lastName, 
-    email, 
-    password, 
-  });
+  // if(existingUser?.isVerified){
+  //   throw { status: 400, field: 'email', message: 'Email Already Registered'};
+  // }
 
-  const otp = generateSixDigitCode();
-  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+  // // NEEDS REFACTORING
+  // if (existingUser && !existingUser.isVerified) {
+  //   await Promise.all([
+  //     Token.deleteOne({ user: existingUser._id }),
+  //     existingUser.deleteOne()
+  //   ]);
+  // }
 
-  const rawToken = generateCryptoToken();
-  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+  // const user = await User.create({
+  //   firstName, 
+  //   lastName, 
+  //   email, 
+  //   password, 
+  // });
 
-  await Token.create({
-      user: user._id,
-      token: hashedToken,
-      otp: hashedOtp,
-      type: 'email_verify'
-  });
+  // const otp = generateSixDigitCode();
+  // const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
 
-  const emailHtml = generateCodeVerificationHTML(
-    otp,
-    firstName,
-    lastName
-  );
+  // const rawToken = generateCryptoToken();
+  // const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-  await sendEmail(email, "Email Verification Code", emailHtml);
+  // await Token.create({
+  //     user: user._id,
+  //     token: hashedToken,
+  //     otp: hashedOtp,
+  //     type: 'email_verify'
+  // });
+
+  // const emailHtml = generateCodeVerificationHTML(
+  //   otp,
+  //   firstName,
+  //   lastName
+  // );
+
+  // await sendEmail(email, "Email Verification Code", emailHtml);
 
   return {
       message: `The account (${email}) have successfully registered`,

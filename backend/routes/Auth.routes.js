@@ -15,6 +15,7 @@ const {
 } = require('../controllers/Auth.controller')
 const verifyAuth = require('../middlewares/verifyAuth');
 const verifyToken = require('../middlewares/verifyToken');
+const errorHandler = require('../middlewares/errorHandler')
 
 // Sign Up Route
 authRoute.post('/signUp', signUp);
@@ -42,5 +43,7 @@ authRoute.post('/signUp', signUp);
 
 // // request reset password Route
 // authRoute.post('/reset-password', verifyToken, resetPassword);
+
+authRoute.use(errorHandler);
 
 module.exports = authRoute;

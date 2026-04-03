@@ -15,7 +15,7 @@ const {
     requestResetUserPassword,
 } = require('../services/Auth.services');
 
-const signUp = async (req, res) => {
+const signUp = async (req, res, next) => {
     try {
         const result = await registerUser(req.body);
 
@@ -26,12 +26,7 @@ const signUp = async (req, res) => {
             user: result.user
         });
     } catch (error) {
-        res.status(error.status || 500).json({
-            success: false, 
-            field: error.field || 'server',
-            message: error.message || 'Server Error'
-        });
-        console.log(error.message) // Should have an error handler
+        next(error);
     }
 }
 
