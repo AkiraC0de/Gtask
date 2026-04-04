@@ -36,19 +36,6 @@ const ERROR_CODES = require('../errors/errorCodes');
 const ValidationError = require('../errors/ValidationError');
 
 const registerUser = async (userData) => {
-  // check required fields
-  const REQUIRED_FIELDS = [ 
-      { field : 'firstName', label: 'First name'}, 
-      { field : 'lastName', label: 'Last name'}, 
-      { field : 'email', label: 'Email'},
-      { field : 'password', label: 'Password'}
-  ];
-  const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
-
-  if (!requiredFieldValidation.isValid) {
-    throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-  }
-
   const userDataValidation = validateUserData(userData);
   if(!userDataValidation.isValid) {
     throw new ValidationError(userDataValidation.message, userDataValidation.errors);
@@ -68,7 +55,7 @@ const registerUser = async (userData) => {
       existingUser.deleteOne()
     ]);
   } 
-  
+
   const user = await User.create({
     firstName, 
     lastName, 
@@ -129,6 +116,36 @@ const createVerificationOtp = async (userId) => {
   return rawOtp;
 }
 
+const verifyUserEmail = async (otp, token) => {
+  const validOtp = await Otp.findOne({user : token.user});
+
+  if(!validOtp){
+    throw new GenericError(401, "The OTP has expired. Please request for a new one.", ERROR_CODES.EXPIRED_OTP);
+  }
+
+  const hashedOtp = crypto
+    .createHash('sha256')
+    .update(otp)
+    .digest('hex');
+  
+  if(validOtp.otp !== hashedOtp){
+    validOtp.attempts++;
+    await validOtp.save();
+    throw new ValidationError('Invalid Input', [{ field: 'otp', message: 'Invalid code input.' }]);
+  }
+
+  await Promise.all([
+    User.findByIdAndUpdate(user._id, { isVerified: true }),
+    validOtp.deleteOne(),
+    token.deleteOne()
+  ])
+}
+
+
+
+
+// NEEDS REFACTORING 
+
 const loginUser = async ({ email, password }) => {
   if (!email.trim() || !password.trim()) {
     throw { status: 400, message: 'Missing data' };
@@ -156,23 +173,6 @@ const loginUser = async ({ email, password }) => {
   };
 }
 
-
-const verifyUserEmail = async (user, otp, token) => {
-  if (!token || !otp.trim() || !user) {
-    throw { status: 400, message: 'Missing data' };
-  }
-
-  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
-  
-  if(token.otp !== hashedOtp){
-    throw { status: 400, field: 'otp', message: 'Incorrect Code' };
-  }
-
-  await Promise.all([
-    User.findByIdAndUpdate(user._id, { isVerified: true }),
-    token.deleteOne()
-  ])
-}
 
 
 const verifyUserEmailResend = async (user, token) => {

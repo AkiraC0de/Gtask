@@ -30,6 +30,18 @@ const signUp = async (req, res, next) => {
         throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
     }
 
+    // check required fields
+    const REQUIRED_FIELDS = [ 
+        { field : 'firstName', label: 'First name'}, 
+        { field : 'lastName', label: 'Last name'}, 
+        { field : 'email', label: 'Email'},
+        { field : 'password', label: 'Password'}
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
+
     const result = await registerUser(req.body);
 
     res.status(201).json({
@@ -38,6 +50,29 @@ const signUp = async (req, res, next) => {
         token: result.token,
         user: result.user
     });
+}
+
+const verifyEmail = async (req, res) => {
+    if(!req.body) {
+        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
+    }
+
+    // checks the required OTP
+    const REQUIRED_FIELDS = [ 
+        { field : 'otp', label: 'OTP'}, 
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
+
+    await verifyUserEmail(req.body.otp, req.token);
+
+    res.status(200).json({
+        success : true, 
+        message: `Success! ${req.user.firstName}, your email is now verified. Start organizing your group tasks and boosting your productivity today.`,
+        user : {email : req.user.email}
+    })
 }
 
 // const logIn = async (req, res) => {
@@ -99,24 +134,7 @@ const signUp = async (req, res, next) => {
 //     });
 // }
 
-// const verifyEmail = async (req, res) => {
-//     try {
-//         await verifyUserEmail(req.user, req.body?.otp, req.token);
 
-//         res.status(200).json({
-//             success : true, 
-//             message: `Success! ${req.user.firstName}, your account is now verified. Start organizing your group tasks and boosting your productivity today.`,
-//             user : {email : req.user.email}
-//         })
-//     } catch (error) {
-//         res.status(error.status || 500).json({
-//             success: false, 
-//             field: error.field || 'server',
-//             message: error.message || 'Server Error'
-//         });
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
 
 // const verifyEmailResend = async (req, res) => {
 //     try {
@@ -185,6 +203,7 @@ const signUp = async (req, res, next) => {
 
 module.exports = {
     signUp,
+    verifyEmail,
     // logIn,
     // logout,
     // refresh,

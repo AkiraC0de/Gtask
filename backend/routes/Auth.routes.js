@@ -32,8 +32,8 @@ authRoute.post('/signUp', signUp);
 // // Verify the users Token Route
 // authRoute.get('/verify-token', verifyToken, verifyTokenController);
 
-// // Email Verification Route
-// authRoute.post('/verify-email', verifyToken, verifyEmail);
+// Email Verification Route
+authRoute.post('/verify-email', verifyToken, verifyEmail);
 
 // // Email Verificaton Resend Code Route
 // authRoute.get('/verify-email-resend', verifyToken, verifyEmailResend);
