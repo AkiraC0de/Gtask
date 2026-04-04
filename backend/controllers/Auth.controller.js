@@ -30,19 +30,6 @@ const signUp = async (req, res, next) => {
         throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
     }
 
-    // check required fields
-    const REQUIRED_FIELDS = [ 
-        { field : "firstName", code : ERROR_CODES.MISSING_FIRSTNAME }, 
-        { field : "lastName", code : ERROR_CODES.MISSING_LASTNAME }, 
-        { field : "email", code : ERROR_CODES.MISSING_EMAIL },
-        { field : "password", code : ERROR_CODES.MISSING_PASSWORD }
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
     const result = await registerUser(req.body);
 
     res.status(201).json({

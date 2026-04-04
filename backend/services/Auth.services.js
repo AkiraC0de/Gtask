@@ -17,7 +17,7 @@ const {
 
 const {
   validateRequiredFields,
-  validateEmail
+  validateUserData
 } = require('../utils/validation');
 
 const {
@@ -31,11 +31,26 @@ const MissingFieldError = require('../errors/MissingFieldError');
 
 const { sendEmail } = require('../utils/mailer');
 const ERROR_CODES = require('../errors/errorCodes');
+const ValidationError = require('../errors/ValidationError');
 
 const registerUser = async (userData) => {
-  const emailValidation = validateEmail(userData.email);
-  if(!emailValidation.success){
-    throw new GenericError(400, emailValidation.message, ERROR_CODES.INVALID_EMAIL_FORMAT);
+  // check required fields
+  const REQUIRED_FIELDS = [ 
+      { field : "firstName", code : ERROR_CODES.MISSING_FIRSTNAME }, 
+      { field : "lastName", code : ERROR_CODES.MISSING_LASTNAME }, 
+      { field : "email", code : ERROR_CODES.MISSING_EMAIL },
+      { field : "password", code : ERROR_CODES.MISSING_PASSWORD }
+  ];
+  const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+
+  if (!requiredFieldValidation.isValid) {
+    throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+  }
+
+  const userDataValidation = validateUserData(userData);
+  if(!userDataValidation.isValid) {
+    console.log(userDataValidation);
+    throw new ValidationError(userDataValidation.message, userDataValidation.errors);
   }
 
   const { firstName, lastName, middleName, email, password } = userData;
