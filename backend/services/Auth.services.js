@@ -36,10 +36,10 @@ const ValidationError = require('../errors/ValidationError');
 const registerUser = async (userData) => {
   // check required fields
   const REQUIRED_FIELDS = [ 
-      { field : "firstName", code : ERROR_CODES.MISSING_FIRSTNAME }, 
-      { field : "lastName", code : ERROR_CODES.MISSING_LASTNAME }, 
-      { field : "email", code : ERROR_CODES.MISSING_EMAIL },
-      { field : "password", code : ERROR_CODES.MISSING_PASSWORD }
+      { field : 'firstName', label: 'First name'}, 
+      { field : 'lastName', label: 'Last name'}, 
+      { field : 'email', label: 'Email'},
+      { field : 'password', label: 'Password'}
   ];
   const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
 
@@ -49,7 +49,6 @@ const registerUser = async (userData) => {
 
   const userDataValidation = validateUserData(userData);
   if(!userDataValidation.isValid) {
-    console.log(userDataValidation);
     throw new ValidationError(userDataValidation.message, userDataValidation.errors);
   }
 

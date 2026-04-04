@@ -17,7 +17,7 @@ class ValidationError extends GenericError {
         success: false,
         code: this.code || ERROR_CODES.UNKOWN_ERROR,  
         message: this.message,
-        errros: this.errors
+        errors: this.errors
     };
   }
 }
