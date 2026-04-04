@@ -1,4 +1,5 @@
 const ERROR_CODES = require('../errors/errorCodes');
+const { capitalizedString, titleCaseString } = require('./utils');
 
 const isEmailFormatValid = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,6 +32,16 @@ const validatePassword = (password) => {
   };
 
   return { isValid : true };
+}
+
+const santizeUserData = (userData) => {
+  return {
+    email : userData.email.toLowerCase().trim(),
+    firstName : titleCaseString(userData.firstName.toLowerCase().trim()),
+    lastName : titleCaseString(userData.lastName.toLowerCase().trim()),
+    middleName: userData?.middleName ? titleCaseString(userData.middleName.toLowerCase().trim()) : null,
+    password : userData.password.trim()
+  }
 }
 
 const validateUserData = (userData) => {
@@ -97,5 +108,6 @@ const validateRequiredFields = (requiredFields, obj) => {
 
 module.exports = { 
   validateRequiredFields,
-  validateUserData
+  validateUserData,
+  santizeUserData
 };

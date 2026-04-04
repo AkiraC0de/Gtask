@@ -17,7 +17,8 @@ const {
 
 const {
   validateRequiredFields,
-  validateUserData
+  validateUserData,
+  santizeUserData
 } = require('../utils/validation');
 
 const {
@@ -52,7 +53,7 @@ const registerUser = async (userData) => {
     throw new ValidationError(userDataValidation.message, userDataValidation.errors);
   }
 
-  const { firstName, lastName, middleName, email, password } = userData;
+  const { firstName, lastName, middleName, email, password } = santizeUserData(userData);
 
   const existingUser = await User.findOne({email});
 
