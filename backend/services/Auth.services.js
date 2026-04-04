@@ -1,6 +1,7 @@
 
 const User = require('../models/User');
 const Token = require('../models/Token');
+const Otp = require('../models/Otp');
 const bcryptjs = require('bcryptjs');
 const crypto = require('crypto');
 
@@ -56,59 +57,45 @@ const registerUser = async (userData) => {
   const { firstName, lastName, middleName, email, password } = santizeUserData(userData);
 
   const existingUser = await User.findOne({email});
-
   if(existingUser){
     if(existingUser.isEmailVerified){
       throw new GenericError(400, "Email already registered.", ERROR_CODES.EMAIL_ALREADY_EXISTS);
     }
 
-    await Token.deleteMany({ user: existingUser._id });
+    await Promise.all([
+      Token.deleteMany({ user: existingUser._id, type: 'emailVerification' }),
+      Otp.deleteMany({ user: existingUser._id, type: 'emailVerification' }),
+      existingUser.deleteOne()
+    ]);
+  } 
+  
+  const user = await User.create({
+    firstName, 
+    lastName, 
+    email, 
+    password, 
+  });
+  
+  const [newToken, newOtp] = await Promise.all([
+    createVerificationToken(user._id),
+    createVerificationOtp(user._id)
+  ]);
 
-    const newToken = await createVerificationToken(existingUser._id);
-    
-  }
+  const emailHtml = generateCodeVerificationHTML(
+    newOtp,
+    firstName,
+    lastName
+  );
 
-
-  // const user = await User.create({
-  //   firstName, 
-  //   lastName, 
-  //   email, 
-  //   password, 
-  // });
-
-  // const otp = generateSixDigitCode();
-  // const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
-
-  // const rawToken = generateCryptoToken();
-  // const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-
-  // await Token.create({
-  //     user: user._id,
-  //     token: hashedToken,
-  //     otp: hashedOtp,
-  //     type: 'email_verify'
-  // });
-
-  // const emailHtml = generateCodeVerificationHTML(
-  //   otp,
-  //   firstName,
-  //   lastName
-  // );
-
-  // await sendEmail(email, "Email Verification Code", emailHtml);
+  await sendEmail(email, "Email Verification Code", emailHtml);
 
   return {
-      message: `The account (${email}) have successfully registered`,
-      token : 'test',
-      user: {
-          email: "user.email"
-      }
+    message: `The account (${email}) required validation. We've sent an OTP via Email.`,
+    token : newToken
   };
 }
 
 const createVerificationToken = async (userId) => {
-  await Token.deleteMany({ user: userId, type: 'emailVerification' });
-
   const rawToken = crypto.randomBytes(32).toString('hex');
 
   const hashedToken = crypto
@@ -123,6 +110,23 @@ const createVerificationToken = async (userId) => {
   });
 
   return rawToken;
+}
+
+const createVerificationOtp = async (userId) => {
+  const rawOtp = generateSixDigitCode();
+
+  const hashedOtp = crypto
+    .createHash('sha256')
+    .update(rawOtp)
+    .digest('hex');
+
+  await Otp.create({
+    user: userId,
+    type: 'emailVerification',
+    otp: hashedOtp
+  });
+
+  return rawOtp;
 }
 
 const loginUser = async ({ email, password }) => {

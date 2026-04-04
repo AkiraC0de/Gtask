@@ -10,6 +10,17 @@ const otpSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    type: {
+        type: String,
+        required: true,
+        enum: ['emailVerification']
+    },
+    attempts :{
+        type: Number,
+        default: 0,
+        max: [10, 'exceeds maximum allowed attempts(10)'],
+        required: true
+    },
     updatedAt: {
         type: Date,
         default: Date.now
