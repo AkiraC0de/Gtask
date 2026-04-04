@@ -57,17 +57,17 @@ const registerUser = async (userData) => {
 
   const existingUser = await User.findOne({email});
 
-  if(existingUser?.isEmailVerified){
-    throw new GenericError(400, "Email already registered", ERROR_CODES.EMAIL_ALREADY_EXISTS);
+  if(existingUser){
+    if(existingUser.isEmailVerified){
+      throw new GenericError(400, "Email already registered.", ERROR_CODES.EMAIL_ALREADY_EXISTS);
+    }
+
+    await Token.deleteMany({ user: existingUser._id });
+
+    const newToken = await createVerificationToken(existingUser._id);
+    
   }
 
-  // // NEEDS REFACTORING
-  // if (existingUser && !existingUser.isVerified) {
-  //   await Promise.all([
-  //     Token.deleteOne({ user: existingUser._id }),
-  //     existingUser.deleteOne()
-  //   ]);
-  // }
 
   // const user = await User.create({
   //   firstName, 
@@ -106,6 +106,24 @@ const registerUser = async (userData) => {
   };
 }
 
+const createVerificationToken = async (userId) => {
+  await Token.deleteMany({ user: userId, type: 'emailVerification' });
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(rawToken)
+    .digest('hex');
+
+  await Token.create({
+    user: userId,
+    type: 'emailVerification',
+    token: hashedToken
+  });
+
+  return rawToken;
+}
 
 const loginUser = async ({ email, password }) => {
   if (!email.trim() || !password.trim()) {
