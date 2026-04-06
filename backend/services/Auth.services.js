@@ -19,7 +19,7 @@ const {
 const {
   validateRequiredFields,
   validateUserData,
-  santizeUserData
+  sanitizeUserData
 } = require('../utils/validation');
 
 const {
@@ -41,7 +41,7 @@ const registerUser = async (userData) => {
     throw new ValidationError(userDataValidation.message, userDataValidation.errors);
   }
 
-  const { firstName, lastName, middleName, email, password } = santizeUserData(userData);
+  const { firstName, lastName, middleName, email, password } = sanitizeUserData(userData);
 
   const existingUser = await User.findOne({email});
   if(existingUser){
@@ -149,25 +149,14 @@ const verifyUserEmail = async (otp, token) => {
   ])
 }
 
-
-
-
-// NEEDS REFACTORING 
-
-const loginUser = async ({ email, password }) => {
-  if (!email.trim() || !password.trim()) {
-    throw { status: 400, message: 'Missing data' };
-  }
+const signInUser = async (userData) => {
+  const {email , password} = sanitizeUserData(userData);
 
   const user = await User.findOne({email}).select('+password');
   const isPasswordMatched = await user.comparePassword(password);
 
-  if(!user || !user.isVerified) {
-    throw { status: 401, field: 'email', message: 'Email is not registered' };
-  }
-
-  if(!isPasswordMatched){
-    throw { status: 401, field: 'password', message: 'Incorrect Password' };
+  if(!user || !user.isEmailVerified || !isPasswordMatched) {
+    throw new ValidationError('Invalid email or password.');
   }
 
   return {
@@ -175,6 +164,7 @@ const loginUser = async ({ email, password }) => {
     refreshToken: generateRefreshToken(user),
     user: {
       firstName: user.firstName,
+      middleName: user.middleName,
       lastName: user.lastName,
       email: user.email,
     }
@@ -182,6 +172,8 @@ const loginUser = async ({ email, password }) => {
 }
 
 
+
+// NEEDS REFACTORING 
 
 const verifyUserEmailResend = async (user, token) => {
   if (!token || !user) {
@@ -273,7 +265,7 @@ const resetUserPassword = async (user, token, newPassword) => {
 
 module.exports = {
   registerUser,
-  loginUser,
+  signInUser,
   verifyUserEmail,
   verifyUserEmailResend,
   resetUserPassword,

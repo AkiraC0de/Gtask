@@ -8,7 +8,7 @@ const {
 
 const {
     registerUser, 
-    loginUser, 
+    signInUser, 
     verifyUserEmail, 
     verifyUserEmailResend,
     resetUserPassword,
@@ -75,7 +75,7 @@ const verifyEmail = async (req, res) => {
     })
 }
 
-const logIn = async (req, res) => {
+const signIn = async (req, res) => {
      // checks the required email and password
     const REQUIRED_FIELDS = [ 
         { field : 'email', label: 'Email'}, 
@@ -86,7 +86,7 @@ const logIn = async (req, res) => {
         throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
     }
 
-    const result = await loginUser(req.body);
+    const result = await signInUser(req.body);
 
     const COOKIE_MAX_AGE = 15 * 24 * 60 * 60 * 1000; // 15 days
     
@@ -207,7 +207,7 @@ const logIn = async (req, res) => {
 module.exports = {
     signUp,
     verifyEmail,
-    logIn,
+    signIn,
     // logout,
     // refresh,
     // verifyEmail,

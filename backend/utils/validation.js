@@ -34,34 +34,34 @@ const validatePassword = (password) => {
   return { isValid : true };
 }
 
-const santizeUserData = (userData) => {
+const sanitizeUserData = (userData) => {
   let sanitizedUserData = {}
 
-  if(!userData.email){
+  if(userData.email){
     sanitizedUserData = { ...sanitizedUserData, 
       email : userData.email.toLowerCase().trim()
     }
   }
 
-  if(!userData.firstName){
+  if(userData.firstName){
     sanitizedUserData = { ...sanitizedUserData, 
       firstName : titleCaseString(userData.firstName.toLowerCase().trim())
     }
   }
 
-  if(!userData.lastName){
+  if(userData.lastName){
     sanitizedUserData = { ...sanitizedUserData, 
       lastName : titleCaseString(userData.lastName.toLowerCase().trim())
     }
   }
 
-  if(!userData.middleName){
+  if(userData.middleName){
     sanitizedUserData = { ...sanitizedUserData, 
       middleName: titleCaseString(userData.middleName.toLowerCase().trim()) 
     }
   }
 
-  if(!userData.password){
+  if(userData.password){
     sanitizedUserData = { ...sanitizedUserData, 
       password : userData.password.trim()
     }
@@ -135,5 +135,5 @@ const validateRequiredFields = (requiredFields, obj) => {
 module.exports = { 
   validateRequiredFields,
   validateUserData,
-  santizeUserData
+  sanitizeUserData
 };
