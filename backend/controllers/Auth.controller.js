@@ -25,7 +25,7 @@ const GenericError = require('../errors/GenericError');
 const ERROR_CODES = require('../errors/errorCodes');
 
 
-const signUp = async (req, res, next) => {
+const signUp = async (req, res) => {
     if(!req.body) {
         throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
     }
@@ -37,7 +37,7 @@ const signUp = async (req, res, next) => {
         { field : 'email', label: 'Email'},
         { field : 'password', label: 'Password'}
     ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
     if (!requiredFieldValidation.isValid) {
         throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
     }
@@ -61,7 +61,7 @@ const verifyEmail = async (req, res) => {
     const REQUIRED_FIELDS = [ 
         { field : 'otp', label: 'OTP'}, 
     ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, userData);
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
     if (!requiredFieldValidation.isValid) {
         throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
     }

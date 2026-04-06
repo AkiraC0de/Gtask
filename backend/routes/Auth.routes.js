@@ -18,7 +18,7 @@ const verifyToken = require('../middlewares/verifyToken');
 const errorHandler = require('../middlewares/errorHandler')
 
 // Sign Up Route
-authRoute.post('/signUp', signUp);
+authRoute.post('/sign-up', signUp);
 
 // // Log In Route
 // authRoute.post('/login', logIn);

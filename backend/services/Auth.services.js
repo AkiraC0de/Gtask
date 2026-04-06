@@ -114,10 +114,10 @@ const createVerificationOtp = async (userId) => {
   });
 
   return rawOtp;
-}
+} 
 
-const verifyUserEmail = async (otp, token) => {
-  const validOtp = await Otp.findOne({user : token.user});
+const validateOtp = async (userId, otp) => {
+  const validOtp = await Otp.findOne({user : userId});
 
   if(!validOtp){
     throw new GenericError(401, "The OTP has expired. Please request for a new one.", ERROR_CODES.EXPIRED_OTP);
@@ -133,10 +133,18 @@ const verifyUserEmail = async (otp, token) => {
     await validOtp.save();
     throw new ValidationError('Invalid Input', [{ field: 'otp', message: 'Invalid code input.' }]);
   }
+}
+
+const deleteOtp = async (userId, type) => {
+  await Otp.deleteMany({user : userId, type})
+}
+
+const verifyUserEmail = async (otp, token) => {
+  await validateOtp(token.user, otp);
 
   await Promise.all([
-    User.findByIdAndUpdate(user._id, { isVerified: true }),
-    validOtp.deleteOne(),
+    User.findByIdAndUpdate(token.user, { isEmailVerified: true }),
+    deleteOtp(token.user, 'emailVerification'),
     token.deleteOne()
   ])
 }
