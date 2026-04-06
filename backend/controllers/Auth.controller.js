@@ -75,28 +75,31 @@ const verifyEmail = async (req, res) => {
     })
 }
 
-// const logIn = async (req, res) => {
-//     try {
-//         const result = await loginUser(req.body)
-        
-//         res.status(200).cookie('gtask', result.refreshToken, { 
-//             httpOnly: true,
-//             maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
-//         }).json({
-//             success: true, 
-//             message: 'Success Login', 
-//             user: result.user,
-//             token: result.accessToken
-//         });
-//     } catch (error) {
-//         res.status(error.status || 500).json({
-//             success: false, 
-//             field: error.field || 'server',
-//             message: error.message || 'Server Error'
-//         });
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
+const logIn = async (req, res) => {
+     // checks the required email and password
+    const REQUIRED_FIELDS = [ 
+        { field : 'email', label: 'Email'}, 
+        { field : 'password', label: 'Password'}, 
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
+
+    const result = await loginUser(req.body);
+
+    const COOKIE_MAX_AGE = 15 * 24 * 60 * 60 * 1000; // 15 days
+    
+    res.status(200).cookie('gtask', result.refreshToken, { 
+        httpOnly: true,
+        maxAge: COOKIE_MAX_AGE 
+    }).json({
+        success: true, 
+        message: 'Success Login', 
+        user: result.user,
+        accessToken: result.accessToken
+    });
+}
 
 // const logout = async (req, res) => {
 //     try {
@@ -204,7 +207,7 @@ const verifyEmail = async (req, res) => {
 module.exports = {
     signUp,
     verifyEmail,
-    // logIn,
+    logIn,
     // logout,
     // refresh,
     // verifyEmail,

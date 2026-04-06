@@ -20,8 +20,11 @@ const errorHandler = require('../middlewares/errorHandler')
 // Sign Up Route
 authRoute.post('/sign-up', signUp);
 
-// // Log In Route
-// authRoute.post('/login', logIn);
+// Email Verification Route
+authRoute.post('/verify-email', verifyToken, verifyEmail);
+
+// Log In Route
+authRoute.post('/login', logIn);
 
 // // Log out Route
 // authRoute.post('/logout', logout);
@@ -32,8 +35,7 @@ authRoute.post('/sign-up', signUp);
 // // Verify the users Token Route
 // authRoute.get('/verify-token', verifyToken, verifyTokenController);
 
-// Email Verification Route
-authRoute.post('/verify-email', verifyToken, verifyEmail);
+
 
 // // Email Verificaton Resend Code Route
 // authRoute.get('/verify-email-resend', verifyToken, verifyEmailResend);
