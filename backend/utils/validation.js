@@ -35,13 +35,39 @@ const validatePassword = (password) => {
 }
 
 const santizeUserData = (userData) => {
-  return {
-    email : userData.email.toLowerCase().trim(),
-    firstName : titleCaseString(userData.firstName.toLowerCase().trim()),
-    lastName : titleCaseString(userData.lastName.toLowerCase().trim()),
-    middleName: userData?.middleName ? titleCaseString(userData.middleName.toLowerCase().trim()) : null,
-    password : userData.password.trim()
+  let sanitizedUserData = {}
+
+  if(!userData.email){
+    sanitizedUserData = { ...sanitizedUserData, 
+      email : userData.email.toLowerCase().trim()
+    }
   }
+
+  if(!userData.firstName){
+    sanitizedUserData = { ...sanitizedUserData, 
+      firstName : titleCaseString(userData.firstName.toLowerCase().trim())
+    }
+  }
+
+  if(!userData.lastName){
+    sanitizedUserData = { ...sanitizedUserData, 
+      lastName : titleCaseString(userData.lastName.toLowerCase().trim())
+    }
+  }
+
+  if(!userData.middleName){
+    sanitizedUserData = { ...sanitizedUserData, 
+      middleName: titleCaseString(userData.middleName.toLowerCase().trim()) 
+    }
+  }
+
+  if(!userData.password){
+    sanitizedUserData = { ...sanitizedUserData, 
+      password : userData.password.trim()
+    }
+  }
+
+  return sanitizedUserData;
 }
 
 const validateUserData = (userData) => {
