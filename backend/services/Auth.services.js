@@ -153,10 +153,21 @@ const signInUser = async (userData) => {
   const {email , password} = sanitizeUserData(userData);
 
   const user = await User.findOne({email}).select('+password');
-  const isPasswordMatched = await user.comparePassword(password);
 
-  if(!user || !user.isEmailVerified || !isPasswordMatched) {
+  let isPasswordMatched = false;
+  
+  if (user) {
+    isPasswordMatched = await user.comparePassword(password);
+  } else {
+    await bcryptjs.hash(password, 10); // Fake comparison to maintain constant time
+  }
+
+  if (!user || !isPasswordMatched) {
     throw new ValidationError('Invalid email or password.');
+  }
+
+  if (!user.isEmailVerified) {
+    throw new ValidationError('Please verify your email address before signing in.');
   }
 
   return {
