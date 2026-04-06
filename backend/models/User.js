@@ -60,6 +60,15 @@ userSchema.methods.comparePassword = async function(enteredPassword) {
   return await bcryptjs.compare(enteredPassword, this.password);
 };
 
+userSchema.methods.toPublicJSON = function() {
+  return {
+    firstName: this.firstName,
+    middleName: this.middleName,
+    lastName: this.lastName,
+    email: this.email,
+  };
+};
+
 // Security feature: 
 // Middleware to hash the password
 // before saving to the database

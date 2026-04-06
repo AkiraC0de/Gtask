@@ -123,20 +123,19 @@ const validateOtp = async (userId, otp) => {
     throw new GenericError(401, "The OTP has expired. Please request for a new one.", ERROR_CODES.EXPIRED_OTP);
   }
 
-  const hashedOtp = crypto
-    .createHash('sha256')
-    .update(otp)
-    .digest('hex');
+  const isValid = await validOtp.compareOtp(otp)
   
-  if(validOtp.otp !== hashedOtp){
-    validOtp.attempts++;
-    await validOtp.save();
+  if(!isValid){
     throw new ValidationError('Invalid Input', [{ field: 'otp', message: 'Invalid code input.' }]);
   }
 }
 
-const deleteOtp = async (userId, type) => {
+const deleteUserOtpByType = async (userId, type) => {
   await Otp.deleteMany({user : userId, type})
+}
+
+const deleteUserTokenByType = async (userId, type) => {
+  await Token.deleteMany({user : userId, type})
 }
 
 const verifyUserEmail = async (otp, token) => {
@@ -144,7 +143,7 @@ const verifyUserEmail = async (otp, token) => {
 
   await Promise.all([
     User.findByIdAndUpdate(token.user, { isEmailVerified: true }),
-    deleteOtp(token.user, 'emailVerification'),
+    deleteUserOtpByType(token.user, 'emailVerification'),
     token.deleteOne()
   ])
 }
@@ -173,12 +172,7 @@ const signInUser = async (userData) => {
   return {
     accessToken: generateAccessToken(user),
     refreshToken: generateRefreshToken(user),
-    user: {
-      firstName: user.firstName,
-      middleName: user.middleName,
-      lastName: user.lastName,
-      email: user.email,
-    }
+    user: user.toPublicJSON()
   };
 }
 
@@ -280,5 +274,6 @@ module.exports = {
   verifyUserEmail,
   verifyUserEmailResend,
   resetUserPassword,
-  requestResetUserPassword
+  requestResetUserPassword,
+  deleteUserTokenByType
 }
