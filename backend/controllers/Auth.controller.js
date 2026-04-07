@@ -23,6 +23,8 @@ const {
 const MissingFieldError = require('../errors/MissingFieldError');
 const GenericError = require('../errors/GenericError');
 const ERROR_CODES = require('../errors/errorCodes');
+const { COOKIE_MAX_AGE } = require('../utils/cookie,js');
+const UnathorizeError = require('../errors/UnuthorizeError');
 
 
 const signUp = async (req, res) => {
@@ -96,8 +98,6 @@ const signIn = async (req, res) => {
     }
 
     const result = await signInUser(req.body);
-
-    const COOKIE_MAX_AGE = 15 * 24 * 60 * 60 * 1000; // 15 days
     
     res.status(200).cookie('gtrt', result.refreshToken, { 
         httpOnly: true,
@@ -114,10 +114,7 @@ const signOut = async (req, res) => {
     const token = req.cookies.gtrt;
 
     if (!token) {
-        return res.status(400).json({
-            success: false,
-            message: "No active session found"
-        });
+        throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION)
     }
 
     res.clearCookie('gtrt');
@@ -127,31 +124,35 @@ const signOut = async (req, res) => {
     });
 }
 
-// const refresh = (req, res) => {
-//     const cookie = req.cookies.gtask;
-//     if(!cookie) return res.status(401).json({success: false, message: 'Unathorized'}); 
+const refresh = (req, res) => {
+    const cookie = req.cookies.gtrt;
 
-//     jwt.verify(cookie, process.env.JWT_ACCESSTOKEN, async (err, decoded) => {
-//         if(err) return res.status(401).json({success: false, message: 'Unathorized'});
+    if(!cookie) {
+        throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION);
+    }
+
+    jwt.verify(cookie, process.env.JWT_ACCESSTOKEN, async (err, decoded) => {
+        if(err) {
+            throw new GenericError(400, 'No active session have found.', ERROR_CODES.INVALID_SESSION)
+        }
         
-//         const user = await User.findById(decoded._id);
-//         if(!user) return res.status(401).json({success: false, message: 'Unathorized'});
+        const user = await User.findById(decoded._id);
 
-//         res.status(200).cookie('gtask', generateRefreshToken(user), {
-//             httpOnly: true,
-//             maxAge: 30 * 24 * 60 * 60 * 1000 // 15 days
-//         }).json({
-//             success: true, 
-//             message: 'Success Login', 
-//             data: {
-//                 name: user.name,
-//                 email: user.email,
-//                 profileImage: user.profileImage
-//             },
-//             token: generateAccessToken(user)
-//         });
-//     });
-// }
+        if(!user) {
+            throw new UnathorizeError('Unuthorized.');
+        }
+
+        res.status(200).cookie('gtrt', generateRefreshToken(user), {
+            httpOnly: true,
+            maxAge: COOKIE_MAX_AGE
+        }).json({
+            success: true, 
+            message: 'Success Login', 
+            user: user.toPublicJSON(),
+            accessToken: generateAccessToken(user)
+        });
+    });
+}
 
 
 
@@ -210,9 +211,7 @@ module.exports = {
     verifyEmailResend,
     signIn,
     signOut,
-    
-    // refresh,
-    // verifyEmail,
+    refresh,
 
     // requestResetPassword,
     // verifyTokenController,

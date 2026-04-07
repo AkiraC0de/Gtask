@@ -187,7 +187,7 @@ const resendEmailVerification = async (token) => {
     token.deleteOne(),
     deleteUserOtpByType(token.user, 'emailVerification')
   ]);
-  
+
   const [newToken, newOtp] = await Promise.all([
     createVerificationToken(token.user),
     createVerificationOtp(token.user)
@@ -196,8 +196,6 @@ const resendEmailVerification = async (token) => {
   // send the new otp to user via email
   const emailHtml = generateResendCodeHTML(newOtp);
   await sendEmail(token.user.email, "New email Verification Code", emailHtml);
-
-  
 
   return {
     token: newToken,
