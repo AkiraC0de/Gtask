@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const Token = require('../models/Token');
+const SessionToken = require('../models/SessionToken');
 const UnathorizeError = require('../errors/UnuthorizeError');
 const ERROR_CODES = require('../errors/errorCodes');
 
@@ -21,7 +21,7 @@ const verifyToken = async (req, res, next) => {
                         .update(token)
                         .digest('hex');
 
-  const validToken = await Token.findOne({token : hashedToken}).populate('user');
+  const validToken = await SessionToken.findOne({token : hashedToken}).populate('user');
 
   if(!validToken) {
     throw new UnathorizeError('Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);

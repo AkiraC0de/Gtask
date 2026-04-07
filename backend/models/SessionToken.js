@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const tokenSchema = new mongoose.Schema({
+const sessionTokenSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -28,4 +28,4 @@ const tokenSchema = new mongoose.Schema({
 
 // This creates a TTL (Time To Live) index
 // this will automatically deleted after 15 minutes
-module.exports = mongoose.model('Token', tokenSchema);
+module.exports = mongoose.model('SessionToken', sessionTokenSchema);

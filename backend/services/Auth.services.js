@@ -1,6 +1,6 @@
 
 const User = require('../models/User');
-const Token = require('../models/Token');
+const SessionToken = require('../models/SessionToken');
 const Otp = require('../models/Otp');
 
 const jwt = require('jsonwebtoken');
@@ -52,7 +52,7 @@ const registerUser = async (userData) => {
     }
 
     await Promise.all([
-      Token.deleteMany({ user: existingUser._id, type: 'emailVerification' }),
+      SessionToken.deleteMany({ user: existingUser._id, type: 'emailVerification' }),
       Otp.deleteMany({ user: existingUser._id, type: 'emailVerification' }),
       existingUser.deleteOne()
     ]);
@@ -92,7 +92,7 @@ const createVerificationToken = async (userId) => {
     .update(rawToken)
     .digest('hex');
 
-  await Token.create({
+  await SessionToken.create({
     user: userId,
     type: 'emailVerification',
     token: hashedToken
@@ -137,7 +137,7 @@ const deleteUserOtpByType = async (userId, type) => {
 }
 
 const deleteUserTokenByType = async (userId, type) => {
-  await Token.deleteMany({user : userId, type})
+  await SessionToken.deleteMany({user : userId, type})
 }
 
 const verifyUserEmail = async (otp, token) => {
