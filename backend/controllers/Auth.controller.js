@@ -1,6 +1,3 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-
 const { 
     generateAccessToken, 
     generateRefreshToken 
@@ -13,6 +10,7 @@ const {
     resendEmailVerification,
     resetUserPassword,
     requestResetUserPassword,
+    rotateRefreshToken,
 } = require('../services/Auth.services');
 
 const {
@@ -23,7 +21,7 @@ const {
 const MissingFieldError = require('../errors/MissingFieldError');
 const GenericError = require('../errors/GenericError');
 const ERROR_CODES = require('../errors/errorCodes');
-const { COOKIE_MAX_AGE } = require('../utils/cookie,js');
+const { COOKIE_MAX_AGE } = require('../utils/cookie.js');
 const UnathorizeError = require('../errors/UnuthorizeError');
 
 
@@ -124,33 +122,23 @@ const signOut = async (req, res) => {
     });
 }
 
-const refresh = (req, res) => {
-    const cookie = req.cookies.gtrt;
+const refresh = async (req, res) => {
+    const refreshToken = req.cookies.gtrt;
 
-    if(!cookie) {
+    if(!refreshToken) {
         throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION);
     }
 
-    jwt.verify(cookie, process.env.JWT_ACCESSTOKEN, async (err, decoded) => {
-        if(err) {
-            throw new GenericError(400, 'No active session have found.', ERROR_CODES.INVALID_SESSION)
-        }
-        
-        const user = await User.findById(decoded._id);
+    const result = await rotateRefreshToken(refreshToken);
 
-        if(!user) {
-            throw new UnathorizeError('Unuthorized.');
-        }
-
-        res.status(200).cookie('gtrt', generateRefreshToken(user), {
-            httpOnly: true,
-            maxAge: COOKIE_MAX_AGE
-        }).json({
-            success: true, 
-            message: 'Success Login', 
-            user: user.toPublicJSON(),
-            accessToken: generateAccessToken(user)
-        });
+    res.status(200).cookie('gtrt', result.refreshToken, {
+        httpOnly: true,
+        maxAge: COOKIE_MAX_AGE
+    }).json({
+        success: true, 
+        message: 'You have recieved a new refresh token.', 
+        user: result.user,
+        accessToken: result.accessToken
     });
 }
 

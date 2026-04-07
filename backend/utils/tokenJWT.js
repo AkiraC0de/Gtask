@@ -16,7 +16,7 @@ const generateRefreshToken = (user) => {
     return jwt.sign({
         _id: user._id,
     }, 
-    process.env.JWT_ACCESSTOKEN,
+    process.env.JWT_REFRESHTOKEN,
     {
         expiresIn: '15d'
     })

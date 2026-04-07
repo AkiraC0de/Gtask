@@ -2,6 +2,8 @@
 const User = require('../models/User');
 const Token = require('../models/Token');
 const Otp = require('../models/Otp');
+
+const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 const crypto = require('crypto');
 
@@ -170,9 +172,9 @@ const signInUser = async (userData) => {
   }
 
   return {
+    user: user.toPublicJSON(),
     accessToken: generateAccessToken(user),
     refreshToken: generateRefreshToken(user),
-    user: user.toPublicJSON()
   };
 }
 
@@ -201,6 +203,28 @@ const resendEmailVerification = async (token) => {
     token: newToken,
     message: `New Code has been sent to your email (${token.user.email})`
   }
+}
+
+const rotateRefreshToken = async (refreshToken) => {
+  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESHTOKEN, (err, decoded) => {
+    if(err) {
+      throw new GenericError(400, 'Invalid Refresh Token.', ERROR_CODES.INVALID_TOKEN)
+    }
+
+    return decoded;
+  });
+
+  const user = await User.findById(decoded._id);
+
+  if (!user) {
+      throw new UnathorizeError('Unauthorized.');
+  }
+
+  return {
+      user: user.toPublicJSON(),
+      accessToken: generateAccessToken(user),
+      refreshToken: generateRefreshToken(user)
+  };
 }
 
 // NEEDS REFACTORING 
@@ -266,6 +290,8 @@ module.exports = {
   signInUser,
   verifyUserEmail,
   resendEmailVerification,
+  rotateRefreshToken,
+
   resetUserPassword,
   requestResetUserPassword,
   deleteUserTokenByType
