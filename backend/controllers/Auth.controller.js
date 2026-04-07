@@ -90,7 +90,7 @@ const signIn = async (req, res) => {
 
     const COOKIE_MAX_AGE = 15 * 24 * 60 * 60 * 1000; // 15 days
     
-    res.status(200).cookie('gtask', result.refreshToken, { 
+    res.status(200).cookie('gtrt', result.refreshToken, { 
         httpOnly: true,
         maxAge: COOKIE_MAX_AGE 
     }).json({
@@ -101,15 +101,22 @@ const signIn = async (req, res) => {
     });
 }
 
-// const logout = async (req, res) => {
-//     try {
-//         res.clearCookie('gtask');
-//         res.status(200).json({success: true, message: `Logout`});
-//     } catch (error) {
-//         res.status(500).json({success: false, message: `Server Error`});
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
+const signOut = async (req, res) => {
+    const token = req.cookies.gtrt;
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: "No active session found"
+        });
+    }
+
+    res.clearCookie('gtrt');
+    res.status(200).json({
+        success: true, 
+        message: `Signed out`
+    });
+}
 
 // const refresh = (req, res) => {
 //     const cookie = req.cookies.gtask;
@@ -208,7 +215,7 @@ module.exports = {
     signUp,
     verifyEmail,
     signIn,
-    // logout,
+    signOut,
     // refresh,
     // verifyEmail,
     // verifyEmailResend,

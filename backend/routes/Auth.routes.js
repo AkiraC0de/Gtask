@@ -5,7 +5,7 @@ const authRoute = express.Router();
 const { 
   signUp, 
   signIn, 
-  logout, 
+  signOut, 
   refresh, 
   verifyEmail, 
   verifyEmailResend, 
@@ -26,8 +26,8 @@ authRoute.post('/verify-email', verifyToken, verifyEmail);
 // Sign In Route
 authRoute.post('/sign-in', signIn);
 
-// // Log out Route
-// authRoute.post('/logout', logout);
+// Sign out Route
+authRoute.get('/sign-out', signOut);
 
 // // Log out Route
 // authRoute.get('/refresh', refresh);
