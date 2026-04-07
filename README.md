@@ -1,4 +1,5 @@
 # 🗂️ GTASK - Full Stack Web App
+#OUTDATED DOC!!!!
 **Task Management** is my second full-stack web application focused on helping students manage and track their group tasks efficiently. The aim is to provide users with a clean, responsive interface and secure backend where they can manage group tasks, export their progess as pdf ,and monitor their progress with ease. 
 
 This project is designed to be *scalable*, with future plans to incorporate collaborative features that allow interactions between users.
