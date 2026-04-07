@@ -10,7 +10,7 @@ const {
     registerUser, 
     signInUser, 
     verifyUserEmail, 
-    verifyUserEmailResend,
+    resendEmailVerification,
     resetUserPassword,
     requestResetUserPassword,
 } = require('../services/Auth.services');
@@ -72,6 +72,15 @@ const verifyEmail = async (req, res) => {
         success : true, 
         message: `Success! ${req.user.firstName}, your email is now verified. Start organizing your group tasks and boosting your productivity today.`,
         user : {email : req.user.email}
+    })
+}
+
+const verifyEmailResend = async (req, res) => {
+    const result = await resendEmailVerification(req.token);
+
+    res.status(200).json({
+        message: result.message,
+        token: result.token
     })
 }
 
@@ -146,23 +155,7 @@ const signOut = async (req, res) => {
 
 
 
-// const verifyEmailResend = async (req, res) => {
-//     try {
-//         const result = await verifyUserEmailResend(req.user, req.token);
 
-//         res.status(200).json({
-//             message: result.message,
-//             token: result.token
-//         })
-//     } catch (error) {
-//         res.status(error.status || 500).json({
-//             success: false, 
-//             field: error.field || 'server',
-//             message: error.message || 'Server Error'
-//         });
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
 
 // const requestResetPassword = async (req, res) => {
 //     try {
@@ -214,11 +207,13 @@ const signOut = async (req, res) => {
 module.exports = {
     signUp,
     verifyEmail,
+    verifyEmailResend,
     signIn,
     signOut,
+    
     // refresh,
     // verifyEmail,
-    // verifyEmailResend,
+
     // requestResetPassword,
     // verifyTokenController,
     // resetPassword

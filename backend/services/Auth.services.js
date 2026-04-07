@@ -176,43 +176,38 @@ const signInUser = async (userData) => {
   };
 }
 
-
-
-// NEEDS REFACTORING 
-
-const verifyUserEmailResend = async (user, token) => {
-  if (!token || !user) {
-    throw { status: 400, message: 'Missing data' };
-  }
-
-  // This checks if the previous Token was in the DB for more than the COOLDOWN time (2 mins)
+const resendEmailVerification = async (token) => {
+  // This checks if the previous Token was in the DB for more than the COOLDOWN time (1 min)
   if(!isAuthorizedForNewToken(token.createdAt)){
-    throw { status: 400, message: 'Please wait a few moments before requesting a new token' };
+    throw new GenericError(429, 'Please wait a few moments before requesting a new one.', ERROR_CODES.PLEASE_WAIT)
   }
 
-  await token.deleteOne();
+  // delete past token and OTP in the DB.
+  await Promise.all([
+    token.deleteOne(),
+    deleteUserOtpByType(token.user, 'emailVerification')
+  ]);
+  
+  const [newToken, newOtp] = await Promise.all([
+    createVerificationToken(token.user),
+    createVerificationOtp(token.user)
+  ]);
 
-  const newOtp = generateSixDigitCode();
-  const hashedOtp = crypto.createHash('sha256').update(newOtp).digest('hex');
-
-  const newToken = generateCryptoToken();
-  const hashedToken = crypto.createHash('sha256').update(newToken).digest('hex');
-
-  await Token.create({
-    user: user._id,
-    token: hashedToken,                     
-    otp: hashedOtp
-  });
-
+  // send the new otp to user via email
   const emailHtml = generateResendCodeHTML(newOtp);
+  await sendEmail(token.user.email, "New email Verification Code", emailHtml);
 
-  await sendEmail(user.email, "New email Verification Code", emailHtml);
+  
 
   return {
     token: newToken,
-    message: `New Code has been sent to your email (${user.email})`
+    message: `New Code has been sent to your email (${token.user.email})`
   }
 }
+
+// NEEDS REFACTORING 
+
+
 
 
 const requestResetUserPassword = async (email) => {
@@ -272,7 +267,7 @@ module.exports = {
   registerUser,
   signInUser,
   verifyUserEmail,
-  verifyUserEmailResend,
+  resendEmailVerification,
   resetUserPassword,
   requestResetUserPassword,
   deleteUserTokenByType

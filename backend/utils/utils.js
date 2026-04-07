@@ -5,7 +5,7 @@ const generateSixDigitCode = () => {
 };
 
 const isAuthorizedForNewToken = (prevTokenCreatedTime) => {
-  const COOLDOWN_TIME_IN_MS = 2 * 60 * 1000; // 2 minutes
+  const COOLDOWN_TIME_IN_MS = 1 * 60 * 1000; // 1 minute
 
   const timeDifference = new Date() - prevTokenCreatedTime; // Result is in milliseconds
 
