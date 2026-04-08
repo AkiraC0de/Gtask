@@ -11,6 +11,7 @@ const {
     resetUserPassword,
     requestResetUserPassword,
     rotateRefreshToken,
+    deleteUserSessionTokenByType,
 } = require('../services/Auth.services');
 
 const {
@@ -167,6 +168,30 @@ const requestResetPassword = async (req, res) => {
     })
 }
 
+const resetPassword = async (req, res) => {
+    if(!req.body) {
+        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
+    }
+
+     // checks the required email
+    const REQUIRED_FIELDS = [ 
+        { field : 'password', label: 'Password'}, 
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
+
+    const result = await resetUserPassword(req.user, req.body.password);
+
+    await deleteUserSessionTokenByType(req.user, 'resetPassword');
+
+    res.status(200).json({
+        success: true, 
+        message: result.message
+    });
+}
+
 // const verifyTokenController = (req, res) => {
 //   return res.status(200).json({
 //     success: true,
@@ -178,23 +203,6 @@ const requestResetPassword = async (req, res) => {
 //   });
 // };
 
-// const resetPassword = async (req, res) => {
-//     try {
-//         const result = await resetUserPassword(req.user, req.token, req.body?.password);
-
-//         res.status(200).json({
-//             success: true, 
-//             message: result.message
-//         });
-//     } catch (error) {
-//         res.status(error.status || 500).json({
-//             success: false, 
-//             field: error.field || 'server',
-//             message: error.message || 'Server Error'
-//         });
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
 
 module.exports = {
     signUp,
@@ -204,7 +212,6 @@ module.exports = {
     signOut,
     refresh,
     requestResetPassword,
-    // requestResetPassword,
+    resetPassword,
     // verifyTokenController,
-    // resetPassword
 }

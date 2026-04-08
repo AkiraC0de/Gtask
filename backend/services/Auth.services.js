@@ -20,7 +20,8 @@ const {
 const {
   validateRequiredFields,
   validateUserData,
-  sanitizeUserData
+  sanitizeUserData,
+  validatePassword
 } = require('../utils/validation');
 
 const {
@@ -135,7 +136,7 @@ const deleteUserOtpByType = async (userId, type) => {
   await Otp.deleteMany({user : userId, type})
 }
 
-const deleteUserTokenByType = async (userId, type) => {
+const deleteUserSessionTokenByType = async (userId, type) => {
   await SessionToken.deleteMany({user : userId, type})
 }
 
@@ -237,13 +238,10 @@ const requestResetUserPassword = async (userData) => {
   const user = await User.findOne({email});
 
   const prevToken = await SessionToken.findOne({user, type: 'resetPassword'});
-  if(prevToken ){
-    console.log(prevToken.isAuthorizedForNewToken())
+  if(prevToken ) {
     if(!prevToken.isAuthorizedForNewToken()){
-      console.log('not')
       throw new GenericError(429, 'Please wait a few moments before requesting a new one.', ERROR_CODES.PLEASE_WAIT);
     } else{
-      console.log('yes')
       await prevToken.deleteOne();
     }
   }
@@ -256,7 +254,7 @@ const requestResetUserPassword = async (userData) => {
     return genericResponse;
   }
 
-  const token = createSessionToken(user._id, 'resetPassword');
+  const token = await createSessionToken(user._id, 'resetPassword');
 
   const resetPasswordURL = `${process.env.FRONTEND_ORIGIN_URL}/reset-password/${token}`
   const emailHtml = generateForgotPasswordEmailHTML(resetPasswordURL, user.firstName);
@@ -266,35 +264,24 @@ const requestResetUserPassword = async (userData) => {
   return genericResponse;
 }
 
-
-
-// NEEDS REFACTORING 
-
-
-
-
-
-
-const resetUserPassword = async (user, token, newPassword) => {
-  if (!token.trim() || !user.trim() || !newPassword.trim()) {
-    throw { status: 400, message: 'Missing data' };
+const resetUserPassword = async (userId, newPassword) => {
+  const passwordValidation = validatePassword(newPassword)
+  if(!passwordValidation.isValid){
+    throw new ValidationError(passwordValidation.message, passwordValidation.errors);
   }
 
-  const userData = await User.findById(user._id);
+  const user = await User.findById(userId);
 
-  if(!userData){
+  if(!user){
     throw { status: 400, message: 'Cannot find the user' };
   }
 
-  userData.password = newPassword; 
+  user.password = newPassword; 
 
-  await Promise.all([
-      userData.save(),
-      token.deleteOne()
-  ]);
+  user.save();
 
   return {
-    message: `New password has been set to your account`
+    message: 'New password has been set to your account'
   }
 }
 
@@ -307,5 +294,5 @@ module.exports = {
 
   resetUserPassword,
   requestResetUserPassword,
-  deleteUserTokenByType
+  deleteUserSessionTokenByType
 }

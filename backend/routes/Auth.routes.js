@@ -38,6 +38,9 @@ authRoute.get('/refresh', refresh);
 // request reset password Route 
 authRoute.post('/request-reset-password', requestResetPassword);
 
+// request reset password Route
+authRoute.post('/reset-password', verifyToken, resetPassword);
+
 // // Verify the users Token Route
 // authRoute.get('/verify-token', verifyToken, verifyTokenController);
 
@@ -45,8 +48,7 @@ authRoute.post('/request-reset-password', requestResetPassword);
 
 
 
-// // request reset password Route
-// authRoute.post('/reset-password', verifyToken, resetPassword);
+
 
 authRoute.use(errorHandler);
 

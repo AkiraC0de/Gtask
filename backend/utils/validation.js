@@ -132,5 +132,6 @@ const validateRequiredFields = (requiredFields, obj) => {
 module.exports = { 
   validateRequiredFields,
   validateUserData,
-  sanitizeUserData
+  sanitizeUserData,
+  validatePassword
 };
