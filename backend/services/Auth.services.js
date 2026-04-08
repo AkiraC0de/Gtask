@@ -14,7 +14,6 @@ const {
 
 const {
   generateSixDigitCode,
-  isAuthorizedForNewToken,
   generateCryptoToken,
 } = require('../utils/utils');
 
@@ -31,7 +30,7 @@ const {
 } = require('../utils/emailHtml');
 
 const GenericError = require('../errors/GenericError');
-const MissingFieldError = require('../errors/MissingFieldError');
+const MissingFieldError = require('../errors/MissingFieldError'); 
 
 const { sendEmail } = require('../utils/mailer');
 const ERROR_CODES = require('../errors/errorCodes');
@@ -85,7 +84,7 @@ const registerUser = async (userData) => {
 }
 
 const createVerificationToken = async (userId) => {
-  const rawToken = crypto.randomBytes(32).toString('hex');
+  const rawToken = generateCryptoToken();
 
   const hashedToken = crypto
     .createHash('sha256')
@@ -180,7 +179,7 @@ const signInUser = async (userData) => {
 
 const resendEmailVerification = async (token) => {
   // This checks if the previous Token was in the DB for more than the COOLDOWN time (1 min)
-  if(!isAuthorizedForNewToken(token.createdAt)){
+  if(!token.isAuthorizedForNewToken(token.createdAt)){
     throw new GenericError(429, 'Please wait a few moments before requesting a new one.', ERROR_CODES.PLEASE_WAIT)
   }
 
@@ -212,8 +211,8 @@ const rotateRefreshToken = async (refreshToken) => {
     }
 
     return decoded;
-  });
-
+  }); 
+  
   const user = await User.findById(decoded._id);
 
   if (!user) {
@@ -226,6 +225,9 @@ const rotateRefreshToken = async (refreshToken) => {
       refreshToken: generateRefreshToken(user)
   };
 }
+
+
+
 
 // NEEDS REFACTORING 
 
@@ -245,7 +247,7 @@ const requestResetUserPassword = async (email) => {
   const token = generateCryptoToken();
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-  await Token.create({
+  await SessionToken.create({
       user,
       token : hashedToken,
       type: 'password_reset'

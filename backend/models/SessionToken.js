@@ -26,6 +26,14 @@ const sessionTokenSchema = new mongoose.Schema({
     }
 });
 
+sessionTokenSchema.methods.isAuthorizedForNewToken = () => {
+    const COOLDOWN_TIME_IN_MS = 1 * 60 * 1000; // 1 minute
+
+    const timeDifference = new Date() - this.createdAt; // Result is in milliseconds
+
+    return timeDifference > COOLDOWN_TIME_IN_MS;
+}
+
 // This creates a TTL (Time To Live) index
 // this will automatically deleted after 15 minutes
 module.exports = mongoose.model('SessionToken', sessionTokenSchema);
