@@ -15,7 +15,8 @@ const {
 
 const {
   validateRequiredFields,
-  validateEmail
+  validateEmail,
+  sanitizeUserData
 } = require('../utils/validation');
 
 const MissingFieldError = require('../errors/MissingFieldError');
@@ -109,9 +110,9 @@ const signIn = async (req, res) => {
 }
 
 const signOut = async (req, res) => {
-    const token = req.cookies.gtrt;
+    const refreshToken = req.cookies.gtrt;
 
-    if (!token) {
+    if (!refreshToken) {
         throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION)
     }
 
@@ -144,25 +145,27 @@ const refresh = async (req, res) => {
 
 
 
+const requestResetPassword = async (req, res) => {
+    if(!req.body) {
+        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
+    }
 
+    // checks the required email
+    const REQUIRED_FIELDS = [ 
+        { field : 'email', label: 'Email'}, 
+    ];
+    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
+    if (!requiredFieldValidation.isValid) {
+        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
+    }
 
-// const requestResetPassword = async (req, res) => {
-//     try {
-//         const result = await requestResetUserPassword(req.body?.email);
+    const result = await requestResetUserPassword(req.body);
 
-//         res.status(200).json({
-//             success: true, 
-//             message: result.message
-//         })
-//     } catch (error) {
-//         res.status(error.status || 500).json({
-//             success: false, 
-//             field: error.field || 'server',
-//             message: error.message || 'Server Error'
-//         });
-//         console.log(error.message) // Should have an error handler
-//     }
-// }
+    res.status(200).json({
+        success: true, 
+        message: result.message
+    })
+}
 
 // const verifyTokenController = (req, res) => {
 //   return res.status(200).json({
@@ -200,7 +203,7 @@ module.exports = {
     signIn,
     signOut,
     refresh,
-
+    requestResetPassword,
     // requestResetPassword,
     // verifyTokenController,
     // resetPassword

@@ -90,8 +90,6 @@ const validateUserData = (userData = {}) => {
     .map(field => VALIDATORS[field]?.(userData[field])) 
     .filter(error => error !== null && error !== undefined);                  
 
-    console.log(errors)
-
   return errors.length > 0 
     ? { isValid: false, message: 'User data failed validation.', errors }
     : { isValid: true };

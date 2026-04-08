@@ -35,13 +35,15 @@ authRoute.get('/sign-out', signOut);
 // Refresh Route
 authRoute.get('/refresh', refresh);
 
+// request reset password Route 
+authRoute.post('/request-reset-password', requestResetPassword);
+
 // // Verify the users Token Route
 // authRoute.get('/verify-token', verifyToken, verifyTokenController);
 
 
 
-// // request reset password Route 
-// authRoute.post('/request-reset-password', requestResetPassword);
+
 
 // // request reset password Route
 // authRoute.post('/reset-password', verifyToken, resetPassword);

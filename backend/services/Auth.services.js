@@ -65,8 +65,8 @@ const registerUser = async (userData) => {
   });
   
   const [newToken, newOtp] = await Promise.all([
-    createVerificationToken(user._id),
-    createVerificationOtp(user._id)
+    createSessionToken(user._id, 'emailVerification'),
+    createOtp(user._id, 'emailVerification')
   ]);
 
   const emailHtml = generateCodeVerificationHTML(
@@ -83,7 +83,7 @@ const registerUser = async (userData) => {
   };
 }
 
-const createVerificationToken = async (userId) => {
+const createSessionToken = async (userId, type) => {
   const rawToken = generateCryptoToken();
 
   const hashedToken = crypto
@@ -93,14 +93,14 @@ const createVerificationToken = async (userId) => {
 
   await SessionToken.create({
     user: userId,
-    type: 'emailVerification',
+    type,
     token: hashedToken
   });
 
   return rawToken;
 }
 
-const createVerificationOtp = async (userId) => {
+const createOtp = async (userId, type) => {
   const rawOtp = generateSixDigitCode();
 
   const hashedOtp = crypto
@@ -110,7 +110,7 @@ const createVerificationOtp = async (userId) => {
 
   await Otp.create({
     user: userId,
-    type: 'emailVerification',
+    type,
     otp: hashedOtp
   });
 
@@ -179,7 +179,7 @@ const signInUser = async (userData) => {
 
 const resendEmailVerification = async (token) => {
   // This checks if the previous Token was in the DB for more than the COOLDOWN time (1 min)
-  if(!token.isAuthorizedForNewToken(token.createdAt)){
+  if(!token.isAuthorizedForNewToken( )){
     throw new GenericError(429, 'Please wait a few moments before requesting a new one.', ERROR_CODES.PLEASE_WAIT)
   }
 
@@ -190,8 +190,8 @@ const resendEmailVerification = async (token) => {
   ]);
 
   const [newToken, newOtp] = await Promise.all([
-    createVerificationToken(token.user),
-    createVerificationOtp(token.user)
+    createSessionToken(token.user, 'emailVerification'),
+    createOtp(token.user, 'emailVerification')
   ]);
 
   // send the new otp to user via email
@@ -226,6 +226,45 @@ const rotateRefreshToken = async (refreshToken) => {
   };
 }
 
+const requestResetUserPassword = async (userData) => {
+  const { email } = sanitizeUserData(userData);
+
+  const userDataValidation = validateUserData({email});
+  if(!userDataValidation.isValid) {
+    throw new ValidationError(userDataValidation.message, userDataValidation.errors);
+  }
+
+  const user = await User.findOne({email});
+
+  const prevToken = await SessionToken.findOne({user, type: 'resetPassword'});
+  if(prevToken ){
+    console.log(prevToken.isAuthorizedForNewToken())
+    if(!prevToken.isAuthorizedForNewToken()){
+      console.log('not')
+      throw new GenericError(429, 'Please wait a few moments before requesting a new one.', ERROR_CODES.PLEASE_WAIT);
+    } else{
+      console.log('yes')
+      await prevToken.deleteOne();
+    }
+  }
+
+  const genericResponse = { 
+    message: 'If the email is registered, the reset link has been sent.' 
+  };
+
+  if(!user){
+    return genericResponse;
+  }
+
+  const token = createSessionToken(user._id, 'resetPassword');
+
+  const resetPasswordURL = `${process.env.FRONTEND_ORIGIN_URL}/reset-password/${token}`
+  const emailHtml = generateForgotPasswordEmailHTML(resetPasswordURL, user.firstName);
+
+  await sendEmail(user.email, 'Reset Password Verification', emailHtml);
+
+  return genericResponse;
+}
 
 
 
@@ -234,34 +273,6 @@ const rotateRefreshToken = async (refreshToken) => {
 
 
 
-const requestResetUserPassword = async (email) => {
-  if(!email.trim()){
-    throw { status: 400, message: 'Missing data' };
-  }
-
-  const user = await User.findOne({email});
-  if(!user){
-    return { message: 'If the email is registered, the reset link has been sent.' };
-  }
-
-  const token = generateCryptoToken();
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-  await SessionToken.create({
-      user,
-      token : hashedToken,
-      type: 'password_reset'
-  });
-
-  const resetPasswordURL = `${process.env.FRONTEND_ORIGIN_URL}/reset-password/${token}`
-  const emailHtml = generateForgotPasswordEmailHTML(resetPasswordURL, user.firstName);
-
-  await sendEmail(user.email, 'Reset Password Verification', emailHtml);
-
-  return {
-    message: 'If the email is registered, the reset link has been sent.'
-  }
-}
 
 
 const resetUserPassword = async (user, token, newPassword) => {
