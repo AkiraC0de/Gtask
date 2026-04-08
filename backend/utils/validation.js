@@ -70,33 +70,32 @@ const sanitizeUserData = (userData) => {
   return sanitizedUserData;
 }
 
-const validateUserData = (userData) => {
-  let errors = [];
+const VALIDATORS = {
+  email: (val) => !isEmailFormatValid(val) ? {
+    field: 'email',
+    message: 'Invalid email',
+    code: ERROR_CODES.INVALID_EMAIL_FORMAT
+  } : null,
 
-  if(!isEmailFormatValid(userData?.email)){
-    errors.push({
-      field : 'email',
-      message: 'Invalid email',
-      code: ERROR_CODES.INVALID_EMAIL_FORMAT
-    })
-  }      
-
-  const passwordValidation = validatePassword(userData?.password);
-  if(!passwordValidation.isValid){
-    errors.push(passwordValidation.errors[0]);
+  password: (val) => {
+    const res = validatePassword(val);
+    return !res.isValid ? res.errors[0] : null;
   }
+};
 
-  if(errors.length > 0){
-    return {
-      isValid : false,
-      message: 'User data failed validation.',
-      errors
-    }
-  }
+const validateUserData = (userData = {}) => {
+  const fieldsToValidate = Object.keys(userData);
 
-  return { isValid : true };
-}
+  const errors = fieldsToValidate
+    .map(field => VALIDATORS[field]?.(userData[field])) 
+    .filter(error => error !== null && error !== undefined);                  
 
+    console.log(errors)
+
+  return errors.length > 0 
+    ? { isValid: false, message: 'User data failed validation.', errors }
+    : { isValid: true };
+};
 const validateRequiredFields = (requiredFields, obj) => { 
   let errors = [];
 
