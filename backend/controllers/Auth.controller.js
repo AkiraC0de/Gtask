@@ -144,8 +144,6 @@ const refresh = async (req, res) => {
     });
 }
 
-
-
 const requestResetPassword = async (req, res) => {
     if(!req.body) {
         throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
@@ -192,16 +190,16 @@ const resetPassword = async (req, res) => {
     });
 }
 
-// const verifyTokenController = (req, res) => {
-//   return res.status(200).json({
-//     success: true,
-//     message: 'Token is valid',
-//     user: {
-//         _id: req.user._id,
-//         email: req.user.email
-//     }
-//   });
-// };
+const verifiedSessionToken = (req, res) => {
+    if(!req.token) {
+        throw new UnathorizeError('Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Your token is valid.'
+    })
+}
 
 
 module.exports = {
@@ -213,5 +211,5 @@ module.exports = {
     refresh,
     requestResetPassword,
     resetPassword,
-    // verifyTokenController,
+    verifiedSessionToken,
 }

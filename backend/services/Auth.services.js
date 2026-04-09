@@ -48,7 +48,7 @@ const registerUser = async (userData) => {
   const existingUser = await User.findOne({email});
   if(existingUser){
     if(existingUser.isEmailVerified){
-      throw new GenericError(400, "Email already registered.", ERROR_CODES.EMAIL_ALREADY_EXISTS);
+      throw new GenericError(400, "Email is already registered.", ERROR_CODES.EMAIL_ALREADY_EXISTS);
     }
 
     await Promise.all([
@@ -249,7 +249,7 @@ const requestResetUserPassword = async (userData) => {
   const genericResponse = { 
     message: 'If the email is registered, the reset link has been sent.' 
   };
-
+0 
   if(!user){
     return genericResponse;
   }
@@ -278,7 +278,7 @@ const resetUserPassword = async (userId, newPassword) => {
 
   user.password = newPassword; 
 
-  user.save();
+  await user.save();
 
   return {
     message: 'New password has been set to your account'

@@ -10,21 +10,21 @@ const {
   verifyEmail, 
   verifyEmailResend, 
   requestResetPassword,
-  verifyTokenController,
+  verifiedSessionToken,
   resetPassword
 } = require('../controllers/Auth.controller')
 const verifyAuth = require('../middlewares/verifyAuth');
-const verifyToken = require('../middlewares/verifyToken');
+const verifySessionToken = require('../middlewares/verifySessionToken');
 const errorHandler = require('../middlewares/errorHandler')
 
 // Sign Up Route
 authRoute.post('/sign-up', signUp);
 
 // Email Verification (OTP via email) Route
-authRoute.post('/verify-email', verifyToken, verifyEmail);
+authRoute.post('/verify-email', verifySessionToken, verifyEmail);
 
 // // Email Verificaton Resend (OTP) Route
-authRoute.get('/verify-email-resend', verifyToken, verifyEmailResend);
+authRoute.get('/verify-email-resend', verifySessionToken, verifyEmailResend);
 
 // Sign In Route
 authRoute.post('/sign-in', signIn);
@@ -39,17 +39,12 @@ authRoute.get('/refresh', refresh);
 authRoute.post('/request-reset-password', requestResetPassword);
 
 // request reset password Route
-authRoute.post('/reset-password', verifyToken, resetPassword);
+authRoute.post('/reset-password', verifySessionToken, resetPassword);
 
-// // Verify the users Token Route
-// authRoute.get('/verify-token', verifyToken, verifyTokenController);
+// Verify the users Token Route
+authRoute.get('/verify-session-token', verifySessionToken, verifiedSessionToken);
 
-
-
-
-
-
-
+// Middleware error handler
 authRoute.use(errorHandler);
 
 module.exports = authRoute;

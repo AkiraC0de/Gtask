@@ -3,7 +3,7 @@ const SessionToken = require('../models/SessionToken');
 const UnathorizeError = require('../errors/UnuthorizeError');
 const ERROR_CODES = require('../errors/errorCodes');
 
-const verifyToken = async (req, res, next) => {
+const verifySessionToken = async (req, res, next) => {
   const authorization = req.headers.authorization || req.headers.Authorization;
   if(!authorization) {
     throw new UnathorizeError('Authorization in request headers is required.');
@@ -32,4 +32,4 @@ const verifyToken = async (req, res, next) => {
   next();
 }
 
-module.exports = verifyToken;
+module.exports = verifySessionToken;
