@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const SessionToken = require('../models/SessionToken');
 const UnathorizeError = require('../errors/UnuthorizeError');
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 const verifySessionToken = async (req, res, next) => {
   const authorization = req.headers.authorization || req.headers.Authorization;

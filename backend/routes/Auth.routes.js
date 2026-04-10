@@ -15,6 +15,7 @@ const {
 } = require('../controllers/Auth.controller')
 const verifyAuth = require('../middlewares/verifyAuth');
 const verifySessionToken = require('../middlewares/verifySessionToken');
+const verifyRefreshToken = require('../middlewares/verifyRefreshToken')
 const errorHandler = require('../middlewares/errorHandler')
 
 // Sign Up Route
@@ -30,10 +31,10 @@ authRoute.get('/verify-email-resend', verifySessionToken, verifyEmailResend);
 authRoute.post('/sign-in', signIn);
 
 // Sign out Route
-authRoute.get('/sign-out', signOut);
+authRoute.get('/sign-out', verifyRefreshToken, signOut);
 
 // Refresh Route
-authRoute.get('/refresh', refresh);
+authRoute.get('/refresh', verifyRefreshToken, refresh);
 
 // request reset password Route 
 authRoute.post('/request-reset-password', requestResetPassword);

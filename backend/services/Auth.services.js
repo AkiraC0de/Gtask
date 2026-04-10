@@ -207,19 +207,11 @@ const resendEmailVerification = async (token) => {
   }
 }
 
-const rotateRefreshToken = async (refreshToken) => {
-  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESHTOKEN, (err, decoded) => {
-    if(err) {
-      throw new GenericError(400, 'Invalid Refresh Token.', ERROR_CODES.INVALID_TOKEN)
-    }
-
-    return decoded;
-  }); 
-  
-  const user = await User.findById(decoded._id);
+const rotateRefreshToken = async (userId) => {
+  const user = await User.findById(userId);
 
   if (!user) {
-      throw new UnathorizeError('Unauthorized.');
+      throw new GenericError(400, 'Invalid Refresh Token.', ERROR_CODES.INVALID_TOKEN)
   }
 
   return {
@@ -279,8 +271,9 @@ const resetUserPassword = async (userId, newPassword) => {
   }
 
   user.password = newPassword; 
-
   await user.save();
+
+  await deleteUserSessionTokenByType(userId, 'resetPassword');
 
   return {
     message: 'New password has been set to your account'

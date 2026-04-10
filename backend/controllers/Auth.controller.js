@@ -32,7 +32,7 @@ const MissingFieldError = require('../errors/MissingFieldError');
 const GenericError = require('../errors/GenericError');
 const ERROR_CODES = require('../constants/errorCodes.js');
 const { COOKIE_MAX_AGE } = require('../constants/cookie.js');
-const UnathorizeError = require('../errors/UnuthorizeError');
+const Unauthorized = require('../errors/UnuthorizeError');
 
 
 const signUp = async (req, res) => {
@@ -55,7 +55,7 @@ const verifyEmail = async (req, res) => {
 
     res.status(200).json({
         success : true, 
-        message: `Success! ${req.user.firstName}, your email is now verified. Start organizing your group tasks and boosting your productivity today.`,
+        message: `Email verified successfully`,
         user : {email : req.user.email}
     })
 }
@@ -86,12 +86,6 @@ const signIn = async (req, res) => {
 }
 
 const signOut = async (req, res) => {
-    const refreshToken = req.cookies.gtrt;
-
-    if (!refreshToken) {
-        throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION)
-    }
-
     res.clearCookie('gtrt');
     res.status(200).json({
         success: true, 
@@ -100,20 +94,14 @@ const signOut = async (req, res) => {
 }
 
 const refresh = async (req, res) => {
-    const refreshToken = req.cookies.gtrt;
-
-    if(!refreshToken) {
-        throw new GenericError(400, 'No active session found.', ERROR_CODES.INVALID_SESSION);
-    }
-
-    const result = await rotateRefreshToken(refreshToken);
+    const result = await rotateRefreshToken(req.user._id);
 
     res.status(200).cookie('gtrt', result.refreshToken, {
         httpOnly: true,
         maxAge: COOKIE_MAX_AGE
     }).json({
         success: true, 
-        message: 'You have recieved a new refresh token.', 
+        message: 'You have received a new refresh token.', 
         user: result.user,
         accessToken: result.accessToken
     });
@@ -135,8 +123,6 @@ const resetPassword = async (req, res) => {
     validateRequiredFields(RESET_PASSWORD_REQUIRED_FIELDS, req.body);
     const result = await resetUserPassword(req.user, req.body.password);
 
-    await deleteUserSessionTokenByType(req.user, 'resetPassword');
-
     res.status(200).json({
         success: true, 
         message: result.message
@@ -145,7 +131,7 @@ const resetPassword = async (req, res) => {
 
 const verifiedSessionToken = (req, res) => {
     if(!req.token) {
-        throw new UnathorizeError('Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
+        throw new Unauthorized('Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
     }
 
     res.status(200).json({
