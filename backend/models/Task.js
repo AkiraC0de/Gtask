@@ -84,13 +84,7 @@ const taskSchema = new Schema({
     required: true,
     index: true
   },
-  courseId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Course',
-    required: true,
-    index: true
-  },
-  
+
   // Metadata
   priority: {
     type: String,
