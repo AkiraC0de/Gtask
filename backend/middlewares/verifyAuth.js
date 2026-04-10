@@ -1,26 +1,27 @@
 const jwt = require('jsonwebtoken');
+const UnathorizeError = require('../errors/UnuthorizeError');
 
 const verifyAuth = (req, res, next) => {
-    try {
-        const authorization = req.headers.authorization || req.headers.Authorization;
-        if(!authorization) return res.status(403).json({success: false, message: 'You are not authorized to access this!'});
-        
-        if(!authorization.startsWith('Bearer ')) return res.status(403).json({success: false, message: 'You are not authorized to access this!'});
-
-        // Extract the token from authorization
-        const token = authorization.split(' ')[1];
-
-        // Validate the access token
-        jwt.verify(token, process.env.JWT_ACCESSTOKEN, (err, user) => {
-            if(err) return res.status(403).json({success: false, message: 'Invalid Token'});
-
-            req.user = user;
-            next();
-        });
-    } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({success: false, message: 'Server Error'});
+    const authorization = req.headers.authorization || req.headers.Authorization;
+    if(!authorization) {
+        throw new UnathorizeError('Authorization in request headers is required.');
     }
+    
+    if(!authorization.startsWith('Bearer ')) {
+        throw new UnathorizeError('Invalid Authorization format. Valid : Bearer <token>');
+    }
+    // Extract the token from authorization
+    const token = authorization.split(' ')[1];
+
+    // Validate the access token
+    jwt.verify(token, process.env.JWT_ACCESSTOKEN, (err, user) => {
+        if(err) if(!validToken) {
+            throw new UnathorizeError('Access Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
+        }
+
+        req.user = user;
+        next();
+    });
 }
 
 module.exports = verifyAuth;
