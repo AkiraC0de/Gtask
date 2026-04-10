@@ -1,4 +1,6 @@
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
+const GenericError = require('../errors/GenericError');
+const MissingFieldError = require('../errors/MissingFieldError');
 const { capitalizedString, titleCaseString } = require('./utils');
 
 const isEmailFormatValid = (email) => {
@@ -75,7 +77,7 @@ const validateUserData = (userData = {}) => {
 
   const errors = fieldsToValidate
     .map(field => VALIDATORS[field]?.(userData[field])) 
-    .filter(error => error !== null && error !== undefined);                  
+    .filter(error => error !== null && error !== undefined);       
 
   return errors.length > 0 
     ? { isValid: false, message: 'User data failed validation.', errors }
@@ -102,24 +104,25 @@ const validateRequiredFields = (requiredFields, obj) => {
     }
   }
 
-  if(errors.length > 0) {
+  if(errors.length > 0){
     const missingFieldsString = errors.map(field => field.field).join(", ");
     const messageVerb = errors.length > 1 ? 'are' : 'is';
     const message = `${missingFieldsString} ${messageVerb} required and cannot be empty.`;
 
-    return { 
-      isValid : false,
-      message,
-      errors
-    };
+    throw new MissingFieldError(message, errors);
   }
+}
 
-  return { isValid : true };
+const checkRequestBody = (body) => {
+  if(!body) {
+      throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
+  }
 }
 
 module.exports = { 
   validateRequiredFields,
   validateUserData,
   sanitizeUserData,
-  validatePassword
+  validatePassword,
+  checkRequestBody
 };

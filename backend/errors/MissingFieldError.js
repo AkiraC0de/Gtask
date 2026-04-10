@@ -1,5 +1,5 @@
 const GenericError = require('./GenericError');
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 class MissingFieldError extends GenericError {
   constructor(message, errors) {

@@ -1,4 +1,4 @@
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 class GenericError extends Error {
   constructor(status, message, code) {

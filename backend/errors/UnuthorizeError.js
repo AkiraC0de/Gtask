@@ -1,5 +1,5 @@
 const GenericError = require('./GenericError');
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 class UnathorizeError extends GenericError {
   constructor(message, code = ERROR_CODES.UNUTHORIZE_ERROR) {

@@ -16,34 +16,28 @@ const {
 
 const {
   validateRequiredFields,
-  validateEmail,
+  checkRequestBody,
   sanitizeUserData
 } = require('../utils/validation');
 
+const {
+  VERIFY_USER_EMAIL_REQUIRED_FIELDS,
+  SIGNIN_REQUIRED_FIELDS,
+  REGISTER_USER_REQUIRED_FIELDS,
+  REQUEST_RESET_PASSWORD_REQUIRED_FIELDS,
+  RESET_PASSWORD_REQUIRED_FIELDS
+} = require('../constants/requiredFields')
+
 const MissingFieldError = require('../errors/MissingFieldError');
 const GenericError = require('../errors/GenericError');
-const ERROR_CODES = require('../errors/errorCodes');
-const { COOKIE_MAX_AGE } = require('../utils/cookie.js');
+const ERROR_CODES = require('../constants/errorCodes.js');
+const { COOKIE_MAX_AGE } = require('../constants/cookie.js');
 const UnathorizeError = require('../errors/UnuthorizeError');
 
 
 const signUp = async (req, res) => {
-    if(!req.body) {
-        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
-    }
-
-    // check required fields
-    const REQUIRED_FIELDS = [ 
-        { field : 'firstName', label: 'First name'}, 
-        { field : 'lastName', label: 'Last name'}, 
-        { field : 'email', label: 'Email'},
-        { field : 'password', label: 'Password'}
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
+    checkRequestBody(req.body);
+    validateRequiredFields(REGISTER_USER_REQUIRED_FIELDS, req.body);
     const result = await registerUser(req.body);
 
     res.status(201).json({
@@ -55,19 +49,8 @@ const signUp = async (req, res) => {
 }
 
 const verifyEmail = async (req, res) => {
-    if(!req.body) {
-        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
-    }
-
-    // checks the required OTP
-    const REQUIRED_FIELDS = [ 
-        { field : 'otp', label: 'OTP'}, 
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
+    checkRequestBody(req.body);
+    validateRequiredFields(VERIFY_USER_EMAIL_REQUIRED_FIELDS, req.body);
     await verifyUserEmail(req.body.otp, req.token);
 
     res.status(200).json({
@@ -87,16 +70,8 @@ const verifyEmailResend = async (req, res) => {
 }
 
 const signIn = async (req, res) => {
-     // checks the required email and password
-    const REQUIRED_FIELDS = [ 
-        { field : 'email', label: 'Email'}, 
-        { field : 'password', label: 'Password'}, 
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
+    checkRequestBody(req.body);
+    validateRequiredFields(SIGNIN_REQUIRED_FIELDS, req.body);
     const result = await signInUser(req.body);
     
     res.status(200).cookie('gtrt', result.refreshToken, { 
@@ -145,19 +120,8 @@ const refresh = async (req, res) => {
 }
 
 const requestResetPassword = async (req, res) => {
-    if(!req.body) {
-        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
-    }
-
-    // checks the required email
-    const REQUIRED_FIELDS = [ 
-        { field : 'email', label: 'Email'}, 
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
+    checkRequestBody(req.body);    
+    validateRequiredFields(REQUEST_RESET_PASSWORD_REQUIRED_FIELDS, req.body);
     const result = await requestResetUserPassword(req.body);
 
     res.status(200).json({
@@ -167,19 +131,8 @@ const requestResetPassword = async (req, res) => {
 }
 
 const resetPassword = async (req, res) => {
-    if(!req.body) {
-        throw new GenericError(400, 'Request body cannot be empty.', ERROR_CODES.MISSING_FIELD);
-    }
-
-     // checks the required email
-    const REQUIRED_FIELDS = [ 
-        { field : 'password', label: 'Password'}, 
-    ];
-    const requiredFieldValidation = validateRequiredFields(REQUIRED_FIELDS, req.body);
-    if (!requiredFieldValidation.isValid) {
-        throw new MissingFieldError(requiredFieldValidation.message, requiredFieldValidation.errors);
-    }
-
+    checkRequestBody(req.body);
+    validateRequiredFields(RESET_PASSWORD_REQUIRED_FIELDS, req.body);
     const result = await resetUserPassword(req.user, req.body.password);
 
     await deleteUserSessionTokenByType(req.user, 'resetPassword');

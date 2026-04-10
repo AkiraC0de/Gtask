@@ -30,11 +30,13 @@ const {
   generateForgotPasswordEmailHTML
 } = require('../utils/emailHtml');
 
+
+
 const GenericError = require('../errors/GenericError');
 const MissingFieldError = require('../errors/MissingFieldError'); 
 
 const { sendEmail } = require('../utils/mailer');
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 const ValidationError = require('../errors/ValidationError');
 
 const registerUser = async (userData) => {

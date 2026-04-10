@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const GenericError = require('../errors/GenericError');
-const ERROR_CODES = require('../errors/errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 const otpSchema = new mongoose.Schema({
     user: {

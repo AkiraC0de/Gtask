@@ -1,5 +1,5 @@
 const GenericError = require('./GenericError');
-const ERROR_CODES = require('./errorCodes');
+const ERROR_CODES = require('../constants/errorCodes');
 
 class ValidationError extends GenericError {
   constructor(message, errors){
