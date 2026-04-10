@@ -34,40 +34,27 @@ const validatePassword = (password) => {
   return { isValid : true };
 }
 
-const sanitizeUserData = (userData) => {
-  let sanitizedUserData = {}
+const SANITIZER = {
+  email: (val) => val.toLowerCase().trim(),
+  firstName: (val) => titleCaseString(val.toLowerCase().trim()),
+  lastName: (val) => titleCaseString(val.toLowerCase().trim()),
+  middleName: (val) => titleCaseString(val.toLowerCase().trim()),
+  password: (val) => val.trim(),
+}
 
-  if(userData.email){
-    sanitizedUserData = { ...sanitizedUserData, 
-      email : userData.email.toLowerCase().trim()
-    }
-  }
+const sanitizeUserData = (userData = {}) => {
+  let fieldsToSanitize = Object.keys(userData)
 
-  if(userData.firstName){
-    sanitizedUserData = { ...sanitizedUserData, 
-      firstName : titleCaseString(userData.firstName.toLowerCase().trim())
-    }
-  }
+  return fieldsToSanitize.reduce((acc, field) => {
+    const value = userData[field];
+    const sanitizer = SANITIZER[field];
 
-  if(userData.lastName){
-    sanitizedUserData = { ...sanitizedUserData, 
-      lastName : titleCaseString(userData.lastName.toLowerCase().trim())
-    }
-  }
+    // If a sanitizer exists for this field, use it; 
+    // otherwise, return the original value (or skip it).
+    acc[field] = sanitizer ? sanitizer(value) : value;
 
-  if(userData.middleName){
-    sanitizedUserData = { ...sanitizedUserData, 
-      middleName: titleCaseString(userData.middleName.toLowerCase().trim()) 
-    }
-  }
-
-  if(userData.password){
-    sanitizedUserData = { ...sanitizedUserData, 
-      password : userData.password.trim()
-    }
-  }
-
-  return sanitizedUserData;
+    return acc;
+  }, {});
 }
 
 const VALIDATORS = {
@@ -94,6 +81,7 @@ const validateUserData = (userData = {}) => {
     ? { isValid: false, message: 'User data failed validation.', errors }
     : { isValid: true };
 };
+
 const validateRequiredFields = (requiredFields, obj) => { 
   let errors = [];
 
