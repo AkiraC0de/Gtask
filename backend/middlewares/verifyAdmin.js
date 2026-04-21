@@ -1,6 +1,7 @@
 const UnathorizeError = require("../errors/UnuthorizeError");
 
 const verifyAdmin = (req, res, next) => {
+  console.log(req.user.role);
   if(req.user.role != 'admin'){
     throw new UnathorizeError('You are not allowed to access this route.');
   }

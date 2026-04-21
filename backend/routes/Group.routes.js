@@ -19,7 +19,7 @@ groupRoute.post('/', verifyAuth, createGroup);
 groupRoute.delete('/:groupId', verifyAuth, deleteGroup);
 
 // ADMIN ROUTES
-groupRoute.get('/all', verifyAuth, verifyAdmin, getAllGroups);
+groupRoute.get('/', verifyAuth, verifyAdmin, getAllGroups);
 
 groupRoute.use(errorHandler);
 

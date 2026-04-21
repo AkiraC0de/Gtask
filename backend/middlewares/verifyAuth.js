@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const UnathorizeError = require('../errors/UnuthorizeError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 const verifyAuth = (req, res, next) => {
     const authorization = req.headers.authorization || req.headers.Authorization;
@@ -15,7 +16,7 @@ const verifyAuth = (req, res, next) => {
 
     // Validate the access token
     jwt.verify(token, process.env.JWT_ACCESSTOKEN, (err, user) => {
-        if(err) if(!validToken) {
+        if(err) {
             throw new UnathorizeError('Access Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
         }
 

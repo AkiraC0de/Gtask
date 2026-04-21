@@ -9,7 +9,8 @@ const {
 const { 
   checkRequestBody, 
   checkRequiredFields 
-} = require("../utils/validation")
+} = require("../utils/validation");
+const MissingFieldError = require('../errors/MissingFieldError');
 
 
 const createGroup = async (req, res) => {
@@ -27,7 +28,18 @@ const createGroup = async (req, res) => {
 
 // Unfinished
 const deleteGroup = async (req, res) => {
-  const result = await softDeleteGroup(req.query?.groupdId)
+  const {groupId} = req.params;
+
+  if(!groupId){
+    throw new MissingFieldError('groupId parameter is required.');
+  }
+
+  const result = await softDeleteGroup(groupId);
+  
+  return res.status(201).json({
+    success: true,
+    message: result.message,
+  })
 }
 
 // ADMIN CONTROLLERS
