@@ -63,6 +63,7 @@ const registerUser = async (userData) => {
   const user = await User.create({
     firstName, 
     lastName, 
+    middleName,
     email, 
     password, 
   });

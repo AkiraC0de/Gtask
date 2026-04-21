@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const memberSchema = new Schema({
   userId: {
@@ -116,7 +117,7 @@ const groupSchema = new mongoose.Schema({
     type: Number,
     default: 8,
     min: 2,
-    max: 15
+    max: 50
   },
   
   // Invitations
@@ -208,6 +209,24 @@ groupSchema.pre('save', function(next) {
   next();
 });
 
+// allowed data to be seen by users
+groupSchema.methods.toPublicJSON = function() {
+  return {
+    id: this._id,
+    name: this.name,
+    description: this.description,
+    leader: this.leader,
+    maxMembers: this.maxMembers,
+    bannerUrl: this.bannerUrl,
+    stats: {
+      completionRate: this.stats.completionRate,
+      totalTasks: this.stats.totalTasks
+    },
+    status: this.status,
+    createdAt: this.createdAt
+  };
+};
+
 groupSchema.methods.addMember = function(userId, role = 'member') {
   // Check if already exists
   const exists = this.members.some(m => m.userId.toString() === userId.toString());
@@ -298,18 +317,6 @@ groupSchema.methods.recalculateContributionPercentages = function() {
   return this;
 };
 
-// Static method to get groups by course
-groupSchema.statics.getGroupsByCourse = function(courseId, academicYear, semester) {
-  return this.find({
-    courseId,
-    academicYear,
-    semester,
-    status: 'active'
-  })
-    .populate('leader', 'name email')
-    .populate('members.userId', 'name email')
-    .sort({ createdAt: -1 });
-};
 
 // Static method to get user's groups
 groupSchema.statics.getUserGroups = function(userId) {
@@ -334,6 +341,6 @@ groupSchema.statics.getPendingInvitations = function(email) {
     .populate('leader', 'name email')
 }; 
 
-const Group = mongoose.Model('Group', groupSchema);
+const Group = mongoose.model('Group', groupSchema);
 
 module.exports = Group;

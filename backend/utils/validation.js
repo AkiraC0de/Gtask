@@ -1,6 +1,7 @@
 const ERROR_CODES = require('../constants/errorCodes');
 const GenericError = require('../errors/GenericError');
 const MissingFieldError = require('../errors/MissingFieldError');
+const ValidationError = require('../errors/ValidationError');
 const { capitalizedString, titleCaseString } = require('./utils');
 
 const isEmailFormatValid = (email) => {
@@ -36,7 +37,7 @@ const validatePassword = (password) => {
   return { isValid : true };
 }
 
-const SANITIZER = {
+const USER_DATA_SANITIZER = {
   email: (val) => val.toLowerCase().trim(),
   firstName: (val) => titleCaseString(val.toLowerCase().trim()),
   lastName: (val) => titleCaseString(val.toLowerCase().trim()),
@@ -49,7 +50,7 @@ const sanitizeUserData = (userData = {}) => {
 
   return fieldsToSanitize.reduce((acc, field) => {
     const value = userData[field];
-    const sanitizer = SANITIZER[field];
+    const sanitizer = USER_DATA_SANITIZER[field];
 
     // If a sanitizer exists for this field, use it; 
     // otherwise, return the original value (or skip it).
@@ -59,7 +60,7 @@ const sanitizeUserData = (userData = {}) => {
   }, {});
 }
 
-const VALIDATORS = {
+const USER_DATA_VALIDATORS = {
   email: (val) => !isEmailFormatValid(val) ? {
     field: 'email',
     message: 'Invalid email',
@@ -76,7 +77,7 @@ const validateUserData = (userData = {}) => {
   const fieldsToValidate = Object.keys(userData);
 
   const errors = fieldsToValidate
-    .map(field => VALIDATORS[field]?.(userData[field])) 
+    .map(field => USER_DATA_VALIDATORS[field]?.(userData[field])) 
     .filter(error => error !== null && error !== undefined);       
 
   return errors.length > 0 
@@ -84,7 +85,7 @@ const validateUserData = (userData = {}) => {
     : { isValid: true };
 };
 
-const validateRequiredFields = (requiredFields, obj) => { 
+const checkRequiredFields = (requiredFields, obj) => { 
   let errors = [];
 
   for (const requiredField  of requiredFields) {
@@ -119,10 +120,62 @@ const checkRequestBody = (body) => {
   }
 }
 
+const GROUP_DATA_VALIDATORS = {
+  name: (val) => {
+    if (!val || val.trim().length === 0) {
+      return { field: 'name', message: 'Group name is required', code: ERROR_CODES.MISSING_FIELD };
+    }
+    if (val.length > 200) {
+      return { field: 'name', message: 'Group name cannot exceed 200 characters', code: ERROR_CODES.FIELD_TOO_LONG };
+    }
+    return null;
+  },
+
+  description: (val) => {
+    if (val && val.length > 1000) {
+      return { field: 'description', message: 'Description cannot exceed 1000 characters', code: ERROR_CODES.FIELD_TOO_LONG };
+    }
+    return null;
+  },
+
+  maxMembers: (val) => {
+    const num = Number(val);
+    if (isNaN(num) || num < 2 || num > 50) {
+      return { 
+        field: 'maxMembers', 
+        message: 'Max members must be a number between 2 and 50', 
+        code: ERROR_CODES.INVALID_RANGE 
+      };
+    }
+    return null;
+  },
+
+  status: (val) => {
+    const validStatuses = ['active', 'inactive', 'archived', 'disbanded'];
+    if (val && !validStatuses.includes(val)) {
+      return { field: 'status', message: 'Invalid group status', code: ERROR_CODES.INVALID_ENUM_VALUE };
+    }
+    return null;
+  }
+};
+
+const validateGroupData = (groupData) => {
+  const fieldsToValidate = Object.keys(groupData);
+
+  const errors = fieldsToValidate
+    .map(key => GROUP_DATA_VALIDATORS[key] ? GROUP_DATA_VALIDATORS[key](groupData[key]) : null)
+    .filter(error => error !== null && error !== undefined);
+
+  if (errors.length > 0) {
+    throw new ValidationError('Group data failed validation.', errors);
+  }
+};
+
 module.exports = { 
-  validateRequiredFields,
+  checkRequiredFields,
   validateUserData,
   sanitizeUserData,
   validatePassword,
-  checkRequestBody
+  checkRequestBody,
+  validateGroupData
 };

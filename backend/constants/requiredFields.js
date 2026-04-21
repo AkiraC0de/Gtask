@@ -22,10 +22,17 @@ const RESET_PASSWORD_REQUIRED_FIELDS = [
     { field : 'password', label: 'Password'}, 
 ];
 
+const REGISTER_GROUP_REQUIRED_FIELDS = [
+    { field: 'name', label: 'Group Name' },
+    { field: 'leader', label: 'Group Leader' },
+];
+
 module.exports = {
   VERIFY_USER_EMAIL_REQUIRED_FIELDS,
   SIGNIN_REQUIRED_FIELDS,
   REGISTER_USER_REQUIRED_FIELDS,
   REQUEST_RESET_PASSWORD_REQUIRED_FIELDS,
-  RESET_PASSWORD_REQUIRED_FIELDS
+  RESET_PASSWORD_REQUIRED_FIELDS,
+  
+  REGISTER_GROUP_REQUIRED_FIELDS
 }

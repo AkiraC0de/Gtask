@@ -15,9 +15,8 @@ const {
 } = require('../services/Auth.services');
 
 const {
-  validateRequiredFields,
+  checkRequiredFields,
   checkRequestBody,
-  sanitizeUserData
 } = require('../utils/validation');
 
 const {
@@ -37,7 +36,7 @@ const Unauthorized = require('../errors/UnuthorizeError');
 
 const signUp = async (req, res) => {
     checkRequestBody(req.body);
-    validateRequiredFields(REGISTER_USER_REQUIRED_FIELDS, req.body);
+    checkRequiredFields(REGISTER_USER_REQUIRED_FIELDS, req.body);
     const result = await registerUser(req.body);
 
     res.status(201).json({
@@ -50,7 +49,7 @@ const signUp = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
     checkRequestBody(req.body);
-    validateRequiredFields(VERIFY_USER_EMAIL_REQUIRED_FIELDS, req.body);
+    checkRequiredFields(VERIFY_USER_EMAIL_REQUIRED_FIELDS, req.body);
     await verifyUserEmail(req.body.otp, req.token);
 
     res.status(200).json({
@@ -71,7 +70,7 @@ const verifyEmailResend = async (req, res) => {
 
 const signIn = async (req, res) => {
     checkRequestBody(req.body);
-    validateRequiredFields(SIGNIN_REQUIRED_FIELDS, req.body);
+    checkRequiredFields(SIGNIN_REQUIRED_FIELDS, req.body);
     const result = await signInUser(req.body);
     
     res.status(200).cookie('gtrt', result.refreshToken, { 
@@ -109,7 +108,7 @@ const refresh = async (req, res) => {
 
 const requestResetPassword = async (req, res) => {
     checkRequestBody(req.body);    
-    validateRequiredFields(REQUEST_RESET_PASSWORD_REQUIRED_FIELDS, req.body);
+    checkRequiredFields(REQUEST_RESET_PASSWORD_REQUIRED_FIELDS, req.body);
     const result = await requestResetUserPassword(req.body);
 
     res.status(200).json({
@@ -120,7 +119,7 @@ const requestResetPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
     checkRequestBody(req.body);
-    validateRequiredFields(RESET_PASSWORD_REQUIRED_FIELDS, req.body);
+    checkRequiredFields(RESET_PASSWORD_REQUIRED_FIELDS, req.body);
     const result = await resetUserPassword(req.user, req.body.password);
 
     res.status(200).json({
@@ -129,11 +128,7 @@ const resetPassword = async (req, res) => {
     });
 }
 
-const verifiedSessionToken = (req, res) => {
-    if(!req.token) {
-        throw new Unauthorized('Token has Expired or is Invalid.', ERROR_CODES.INVALID_TOKEN);
-    }
-
+const verifiedSessionToken = (req, res) => {    
     res.status(200).json({
         success: true,
         message: 'Your token is valid.'
