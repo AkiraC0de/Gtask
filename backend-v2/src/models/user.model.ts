@@ -1,6 +1,4 @@
 import mongoose from "mongoose"
-import bcryptjs from "bcryptjs"
-
 
 export const USER_SEX = {
   MALE: "male",
@@ -28,6 +26,7 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     unique: true,
+    minlength: 3,
     trim: true,
     required: true
   },
