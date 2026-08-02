@@ -1,7 +1,10 @@
 import express, {Request, Response} from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser";
+
 import initalizeDatabase from "./db/connect";
+import errorHandler from "./middlewares/errorHander";
+import unrecognizeRouteHandler from "./middlewares/unrecognizeRouteHandler";
 
 const app = express()
 
@@ -20,15 +23,10 @@ app.get("/", (req: Request, res: Response) => {
   })
 })
 
+app.use(unrecognizeRouteHandler)
+app.use(errorHandler)
+
 app.listen(process.env.PORT, async () => {
-  try {
-    await initalizeDatabase()
-    console.log("Startup success. Server 2.0 is now running on port:", process.env.PORT)
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message)
-    } else {
-      console.error('Cannot start the server. An unknown error occurred');
-    }
-  }
+  await initalizeDatabase()
+  console.log("Startup success. Server 2.0 is now running on port:", process.env.PORT)
 })
