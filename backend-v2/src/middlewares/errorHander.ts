@@ -17,6 +17,7 @@ function errorHandler(
             });
   }
 
+  console.error("Server error:", err.message)
   res.status(500).json({ message: "Internal Server Error" });
 }
 

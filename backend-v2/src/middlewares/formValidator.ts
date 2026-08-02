@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../utils/classes/AppError";
 
-export type FieldType = "string" | "number" | "object" | "array" | "boolean";
+export type FieldType = "string" | "number" | "object" | "array" | "boolean" | "email";
 
 export type FieldSchema = {
   field: string; 
   type: FieldType;
   required?: boolean;
   
-  minLength?: number;
+  minLength?: number; 
   maxLength?: number;
   pattern?: RegExp;
-  
+
   min?: number;
   max?: number;
   
@@ -37,15 +37,23 @@ function getNestedValue(obj: Record<string, any> | undefined, path: string): any
 }
 
 /**
+  Helper function to validate Email syntax
+ */
+function isValidEmail(value: string) {
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  return regex.test(value)
+}
+
+/**
  * Validates a single value against a schema field rule
  */
 function validateField(rule: FieldSchema, rawValue: any, req: Request): string | null {
-  let value = rawValue;
+  let value = rawValue
 
   // Required Check
-  const isEmpty = value === undefined || value === null || value === "";
+  const isEmpty = value === undefined || value === null || value === ""
   if (rule.required && isEmpty) {
-    return `Field '${rule.field}' is required.`;
+    return `Field '${rule.field}' is required.`
   }
 
   // Skip further validation if optional and empty
@@ -56,7 +64,17 @@ function validateField(rule: FieldSchema, rawValue: any, req: Request): string |
   // Type Validation & Normalization
   switch (rule.type) {
     case "string":
-      if (typeof value !== "string") return `Field '${rule.field}' must be a string.`;
+    case "email": {
+      if (typeof value !== "string") {
+        return `Field '${rule.field}' must be a string.`;
+      }
+
+      // Email format check
+      if (rule.type === "email" && !isValidEmail(value)) {
+        return `Field '${rule.field}' must be a valid email address.`;
+      }
+
+      // String constraints apply to email as well
       if (rule.minLength !== undefined && value.length < rule.minLength) {
         return `Field '${rule.field}' must be at least ${rule.minLength} characters long.`;
       }
@@ -67,40 +85,49 @@ function validateField(rule: FieldSchema, rawValue: any, req: Request): string |
         return `Field '${rule.field}' format is invalid.`;
       }
       break;
+    }
 
     case "number": {
       const num = typeof value === "number" ? value : Number(value);
-      if (isNaN(num) || value === "") return `Field '${rule.field}' must be a valid number.`;
+      if (isNaN(num) || value === "") return `Field '${rule.field}' must be a valid number.`
       if (rule.min !== undefined && num < rule.min) {
-        return `Field '${rule.field}' must be at least ${rule.min}.`;
+        return `Field '${rule.field}' must be at least ${rule.min}.`
       }
       if (rule.max !== undefined && num > rule.max) {
-        return `Field '${rule.field}' cannot exceed ${rule.max}.`;
+        return `Field '${rule.field}' cannot exceed ${rule.max}.`
       }
-      break;
+      break
     }
 
     case "boolean": {
-      const isBool = typeof value === "boolean" || value === "true" || value === "false";
-      if (!isBool) return `Field '${rule.field}' must be a boolean.`;
-      break;
+      const isBool = typeof value === "boolean" || value === "true" || value === "false"
+      if (!isBool) return `Field '${rule.field}' must be a boolean.`
+      break
     }
 
     case "array":
-      if (!Array.isArray(value)) return `Field '${rule.field}' must be an array.`;
+      if (!Array.isArray(value)) return `Field '${rule.field}' must be an array.`
       if (rule.minItems !== undefined && value.length < rule.minItems) {
-        return `Field '${rule.field}' must contain at least ${rule.minItems} items.`;
+        return `Field '${rule.field}' must contain at least ${rule.minItems} items.`
       }
       if (rule.maxItems !== undefined && value.length > rule.maxItems) {
-        return `Field '${rule.field}' cannot contain more than ${rule.maxItems} items.`;
+        return `Field '${rule.field}' cannot contain more than ${rule.maxItems} items.`
       }
-      break;
+      break
 
     case "object":
       if (typeof value !== "object" || value === null || Array.isArray(value)) {
         return `Field '${rule.field}' must be an object.`;
       }
-      break;
+      break
+
+    case "email":
+      if (typeof value !== "string") return `Field '${rule.field}' must be a string.`
+      
+      if (!isValidEmail(value)) {
+        return `Field '${rule.field}' must be a valid email address.`
+      }
+      break
   }
 
   if (rule.custom) {
@@ -113,7 +140,7 @@ function validateField(rule: FieldSchema, rawValue: any, req: Request): string |
 }
 
 
-export function formValidator(schemas: FieldSchema[]) {
+function formValidator(schemas: FieldSchema[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const errors: ValidationError[] = [];
 
@@ -136,9 +163,11 @@ export function formValidator(schemas: FieldSchema[]) {
     }
 
     if (errors.length > 0) {
-      throw new AppError(400, "Invalid data.", errors)
+      return next(new AppError(400, "Invalid data.", errors));
     }
 
     next();
   };
 }
+
+export default formValidator

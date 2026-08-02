@@ -6,12 +6,16 @@ import initalizeDatabase from "./db/connect";
 import errorHandler from "./middlewares/errorHander";
 import unrecognizeRouteHandler from "./middlewares/unrecognizeRouteHandler";
 
+import userRoute from "./routes/user.routes";
+
 const app = express()
 
 app.use(cors())
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+app.use("/api/users", userRoute)
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
