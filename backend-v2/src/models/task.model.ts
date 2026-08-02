@@ -10,13 +10,11 @@ export const COLUMN_LOCATION = {
 const taskSchema = new mongoose.Schema({
   title: {
     type: String,
-    maxlength: 100,
     required: true,
     trim: true,
   },
   description: {
     type: String,
-    maxlength: 300,
     trim: true,
   },
   groupId: {

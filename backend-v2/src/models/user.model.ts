@@ -15,18 +15,15 @@ export const USER_ACCOUNT_STATUS = {
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    maxlength: 100,
     trim: true   
   },
   lastName: {
     type: String,
-    maxlength: 100,
     trim: true
   },
   username: {
     type: String,
     unique: true,
-    minlength: 3,
     trim: true,
     required: true
   },
