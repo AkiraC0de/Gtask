@@ -9,16 +9,15 @@ function errorHandler(
 ) {
 
   if (err instanceof AppError) {
-    res
-      .status(err.code ?? 400)
-      .json({
-        message: err.message,
-        errors: err.errors
-      });
-    return;
+    return res
+            .status(err.code ?? 400)
+            .json({
+              message: err.message,
+              errors: err.errors
+            });
   }
 
-  res.status(500).json({ error: "Internal Server Error" });
+  res.status(500).json({ message: "Internal Server Error" });
 }
 
 export default errorHandler

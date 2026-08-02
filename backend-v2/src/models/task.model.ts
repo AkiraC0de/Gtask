@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose"
+import mongoose from "mongoose"
 
 export const COLUMN_LOCATION = {
   PLANNING: "todo",
@@ -12,10 +12,12 @@ const taskSchema = new mongoose.Schema({
     type: String,
     maxlength: 100,
     required: true,
+    trim: true,
   },
   description: {
     type: String,
-    maxlength: 300
+    maxlength: 300,
+    trim: true,
   },
   groupId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +45,9 @@ const taskSchema = new mongoose.Schema({
 }, {
   timestamps: true
 })
+
+taskSchema.index({ groupId: 1, columnLocation: 1 });
+taskSchema.index({ groupId: 1, assignedTo: 1 });
 
 export type Task = mongoose.InferSchemaType<typeof taskSchema>
 
