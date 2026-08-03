@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import AppError from "../core/AppError";
+import AppError from "../core/ApiError";
 
 export type FieldType = "string" | "number" | "object" | "array" | "boolean" | "email";
 
