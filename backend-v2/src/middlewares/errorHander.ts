@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import AppError from "../core/ApiError";
+import ApiError, { ErrorType } from "../core/ApiError";
 
 function errorHandler(
   err: Error,
@@ -8,13 +8,8 @@ function errorHandler(
   next: NextFunction
 ) {
 
-  if (err instanceof AppError) {
-    return res
-            .status(err.code ?? 400)
-            .json({
-              message: err.message,
-              errors: err.errors
-            });
+  if (err instanceof ApiError) {
+    return err.handle(err, res)
   }
 
   console.error("Server error:", err.message)

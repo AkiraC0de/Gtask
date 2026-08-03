@@ -1,19 +1,13 @@
 import { Response } from 'express';
 
 enum ResponseStatus {
-  SUCCESS = 200,
+  SUCCESS = 200, 
   NO_CONTENT = 204,
-  BAD_REQUEST = 400,
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403,
-  NOT_FOUND = 404,
+  BAD_REQUEST = 400, 
+  UNAUTHORIZED = 401, 
+  FORBIDDEN = 403, 
+  NOT_FOUND = 404, 
   INTERNAL_ERROR = 500,
-}
-
-enum ResponseMessage {
-  SUCCESS = "Successfull fetch.",
-  UNAUTHORIZED = "You are unauthorized.",
-  NOT_FOUND = "Not found."
 }
 
 abstract class ApiResponse {
@@ -23,6 +17,7 @@ abstract class ApiResponse {
   ) {}
 
   public send(res: Response): Response {
+    console.log(this.message)
     return this.prepare(res, this)
   }
 
@@ -45,14 +40,14 @@ abstract class ApiResponse {
 
 export class SuccessMsgResponse extends ApiResponse {
   constructor(message: string){
-    super(ResponseStatus.SUCCESS, message || ResponseMessage.SUCCESS)
+    super(ResponseStatus.SUCCESS, message || "Successfull fetch.")
   }
 }
 
 export class SuccessResponse<T> extends ApiResponse {
   data: T;
   constructor(message: string, data: T){
-    super(ResponseStatus.SUCCESS, message || ResponseMessage.SUCCESS);
+    super(ResponseStatus.SUCCESS, message || "Successfull fetch.");
     this.data = data;
   }
 
@@ -61,14 +56,50 @@ export class SuccessResponse<T> extends ApiResponse {
   }
 }
 
+export class BadRequestMsgResponse extends ApiResponse {
+  constructor(message: string){
+    super(ResponseStatus.BAD_REQUEST, message)
+  }
+}
+
+export class BadRequestResponse<T> extends ApiResponse {
+  data: T;
+  constructor(message: string, data: T){
+    super(ResponseStatus.BAD_REQUEST, message)
+    this.data = data
+  }
+
+  send(res: Response){
+    return super.prepare(res, this)
+  }
+}
+
+export class NoContentResponse extends ApiResponse {
+  constructor(message: string) {
+    super(ResponseStatus.NOT_FOUND, message)
+  }
+}
+
 export class NotFoundResponse extends ApiResponse {
-  constructor(message?: string) {
-    super(ResponseStatus.NOT_FOUND, message || ResponseMessage.NOT_FOUND)
+  constructor(message: string) {
+    super(ResponseStatus.NOT_FOUND, message)
   }
 }
 
 export class UnauthorizedResponse extends ApiResponse {
-  constructor(message?: string){
-    super(ResponseStatus.UNAUTHORIZED, message || ResponseMessage.UNAUTHORIZED)
+  constructor(message: string){
+    super(ResponseStatus.UNAUTHORIZED, message)
+  }
+}
+
+export class ForbiddenResponse extends ApiResponse {
+  constructor(message: string){
+    super(ResponseStatus.FORBIDDEN, message)
+  }
+}
+
+export class InternalResponse extends ApiResponse {
+  constructor(message: string){
+    super(ResponseStatus.INTERNAL_ERROR, message)
   }
 }
