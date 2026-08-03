@@ -33,10 +33,10 @@ abstract class ApiResponse {
     return res.status(this.statusCode).json(ApiResponse.sanitize(response))
   }
 
-  private static sanitize<T>(data: T) {
-    const clone = {...data}
+  private static sanitize<T extends Record<string, any>>(data: T) {
+    const clone: Record<string, any> = {...data}
 
-    delete (clone as Partial<ApiResponse>).statusCode
+    if(clone?.statusCode !== undefined) delete clone.statusCode
 
     for (const i in clone) if (typeof clone[i] === 'undefined') delete clone[i]
     return clone
