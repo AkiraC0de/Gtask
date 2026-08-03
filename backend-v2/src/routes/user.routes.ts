@@ -2,12 +2,11 @@ import { Router } from "express";
 
 import formValidator from "../middlewares/formValidator";
 
-import { registerSchema } from "../config/validatorSchemas";
+import { registerSchema } from "../validations/validatorSchemas";
+import { registerController } from "../controllers/user.controllers";
 
 const userRoute = Router()
 
-userRoute.post("/register", formValidator(registerSchema), (req, res) => {
-  res.status(200).json("TEST")
-})
+userRoute.post("/register", formValidator(registerSchema), registerController)
 
 export default userRoute
